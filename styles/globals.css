@@ -31,7 +31,68 @@ a {
 }
 
 @layer components {
+  .bg-primary {
+    background: #1d9bf0;
+    /*background: #ccff00;*/
+  }
+
+  .text-primary {
+    color: #1d9bf0;
+    /*color: #ccff00;*/
+  }
+
+  .border-primary {
+    border-color: #1d9bf0;
+    /*border-color: #ccff00;*/
+  }
   .card {
     @apply border border-gray-200 p-6 rounded-md cursor-pointer hover:scale-105 transition;
   }
+
+  .sidebar {
+    @apply fixed h-full z-30 bg-gray-50 pt-6 border-r border-r-gray-200 left-0 w-[88px] -translate-x-[88px] md:translate-x-0;
+  }
+
+  .ml-sidebar {
+    @apply md:ml-[300px] ml-0;
+  }
+
+  .form-group input,
+  .form-group .input {
+    @apply w-full px-4 py-3 rounded-md bg-gray-100 border-gray-100 text-left;
+    @apply mt-1 flex items-center text-[14px];
+    /*font-family: 'Montserrat', sans-serif;*/
+    min-height: 50px;
+  }
+
+  .form-group .input::placeholder {
+    @apply text-gray-400;
+    opacity: 1;
+    font-size: 14px;
+  }
+
+  .form-group .input:focus {
+    box-shadow: none !important;
+  }
+
+  .form-group textarea {
+    min-height: 200px;
+  }
+
+  .form-group p {
+    font-size: 10px;
+    @apply text-gray-400;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center w-32 py-3 justify-center rounded-md bg-primary text-white cursor-pointer;
+    @apply disabled:border-slate-300 disabled:opacity-40;
+    @apply hover:opacity-90;
+    font-size: 14px;
+  }
+
+  .btn-primary:disabled {
+    @apply hover:opacity-40;
+  }
+
 }

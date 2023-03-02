@@ -1,3 +1,3 @@
-import {chain} from 'wagmi'
+import {bsc, bscTestnet} from '@wagmi/chains'
 
-export const CHAINS = [chain.polygonMumbai, chain.arbitrumGoerli]
+export const CHAINS = [bscTestnet, bsc]

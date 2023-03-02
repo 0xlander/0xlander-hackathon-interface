@@ -9,6 +9,8 @@ import {NftProvider} from 'use-nft'
 import {getDefaultProvider} from 'ethers'
 import {Network} from '@ethersproject/networks'
 import {CHAINS} from '../config/chain'
+import {ApolloProvider} from '@apollo/client'
+import {apolloClient} from '../apollo'
 
 export const mumbai: Network = {
   name: 'mumbai',
@@ -35,13 +37,15 @@ const ethersConfig = {
 
 export default function App({Component, pageProps}: AppProps) {
   return (
-    <WagmiConfig client={wagmiClient}>
-      <RainbowKitProvider chains={chains} theme={lightTheme()} showRecentTransactions={true}>
-        <NftProvider fetcher={['ethers', ethersConfig]}>
-          <Toaster />
-          <Component {...pageProps} />
-        </NftProvider>
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <ApolloProvider client={apolloClient}>
+      <WagmiConfig client={wagmiClient}>
+        <RainbowKitProvider chains={chains} theme={lightTheme()} showRecentTransactions={true}>
+          <NftProvider fetcher={['ethers', ethersConfig]}>
+            <Toaster />
+            <Component {...pageProps} />
+          </NftProvider>
+        </RainbowKitProvider>
+      </WagmiConfig>
+    </ApolloProvider>
   )
 }

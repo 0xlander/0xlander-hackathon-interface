@@ -134,8 +134,6 @@ export const nftHolderDecryptWithLit = async (
   contractAddress: string
 ) => {
   const symmetricKey = await getNftHolderDecryptKey(litClient, encryptedSymmetricKey, contractAddress)
-  console.log('sym', symmetricKey)
-  console.log('str', encryptedString)
 
   return await LitJsSdk.decryptString(encryptedString, symmetricKey)
 }

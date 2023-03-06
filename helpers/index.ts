@@ -93,3 +93,21 @@ export function hexToBlob(hexString: string, mimeType: string) {
   const bytes = new Uint8Array(hexString?.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)))
   return new Blob([bytes], {type: mimeType})
 }
+
+export function arrayBufferToHex(arrayBuffer: ArrayBuffer) {
+  const byteArray = new Uint8Array(arrayBuffer)
+  const hexString = Array.from(byteArray)
+    .map((byte) => ('0' + byte.toString(16)).slice(-2))
+    .join('')
+  return hexString
+}
+
+export function hexToArrayBuffer(hexString: string) {
+  const length = hexString.length / 2
+  const arrayBuffer = new ArrayBuffer(length)
+  const byteArray = new Uint8Array(arrayBuffer)
+  for (let i = 0; i < length; i++) {
+    byteArray[i] = parseInt(hexString.substr(i * 2, 2), 16)
+  }
+  return arrayBuffer
+}

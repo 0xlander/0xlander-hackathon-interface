@@ -16,7 +16,10 @@ import {DEFAULT_AVATAR} from '../../config/image'
 import {handleCors, handleUri} from '../../helpers/image'
 import {getNftHolderDecryptKey, nftHolderDecryptWithLit, nftHolderEncryptWithLit} from '../../helpers/lit'
 import en from '@walletconnect/qrcode-modal/dist/cjs/browser/languages/en'
-import {hexToBlob} from '../../helpers'
+import {arrayBufferToHex, hexToArrayBuffer, hexToBlob} from '../../helpers'
+import {str2ab} from '../../helpers/convertor'
+import {hexStringToUint8Array} from '@coinbase/wallet-sdk/dist/util'
+import {count} from 'rxjs'
 
 const Group = () => {
   const {width} = useWindowSize()
@@ -56,7 +59,12 @@ const Group = () => {
             nftHolderDecryptWithLit(litClient, encryptedSymmetricKey, handleEncryptedKey, contractAddress)
               .then((r) => {
                 console.log('sym', r)
-                setSymKey(r)
+                crypto.subtle
+                  .importKey('raw', hexToArrayBuffer(r), 'AES-CBC', false, ['encrypt', 'decrypt'])
+                  .then((r) => {
+                    console.log('r', r)
+                    setSymKey(r)
+                  })
               })
               .catch((e) => {
                 console.error('decrypt', e)
@@ -76,8 +84,22 @@ const Group = () => {
   }, [timIsReady, litClient])
 
   const onSend = async (msg: string) => {
-    const {encryptedString, encryptedSymmetricKey} = await nftHolderEncryptWithLit(contractAddress, msg)
-    const text = await encryptedString.text()
+    // const {encryptedString, encryptedSymmetricKey} = await nftHolderEncryptWithLit(contractAddress, msg)
+    // const text = await encryptedString.text()
+    // console.log(text)
+    // const raw = await crypto.subtle.importKey('raw', hexToArrayBuffer(symKey), 'AES-CBC', false, ['encrypt', 'decrypt'])
+    // console.log(hexToArrayBuffer(symKey))
+    const iv = crypto.getRandomValues(new Uint8Array(16))
+
+    const text = await crypto.subtle.encrypt(
+      {
+        name: 'AES-CBC',
+        iv,
+        length: 128,
+      },
+      symKey,
+      str2ab(msg)
+    )
     console.log(text)
     if (timIsReady && timClient) {
       let message = timClient?.createTextMessage({
@@ -86,8 +108,9 @@ const Group = () => {
         payload: {
           text: JSON.stringify({
             type: 'encrypt',
-            symmetricKey: encryptedSymmetricKey,
-            content: text,
+            // symmetricKey: encryptedSymmetricKey,
+            content: arrayBufferToHex(text),
+            iv: arrayBufferToHex(iv),
           }),
         },
         needReadReceipt: true,
@@ -174,13 +197,15 @@ const Group = () => {
             hasMore={hasMore}
             loader={<LoadingMore />}
           >
-            {messages &&
+            {symKey &&
+              messages &&
               messages?.map((message) => {
                 if (!message?.payload?.text) return
                 return (
                   <div key={message?.ID}>
                     <MessageTile
                       message={{
+                        key: symKey,
                         sender: message.from,
                         content: message.payload.text,
                         // content: !!message?.payload?.text ? message?.payload?.text : '',

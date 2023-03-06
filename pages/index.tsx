@@ -1,39 +1,21 @@
 import {Layout} from '../components/layout'
 import {useEssence} from '../hooks/useEssence'
-import {InboxIcon} from '@heroicons/react/24/solid'
 import CyberConnect, {Env} from '@cyberlab/cyberconnect-v2'
-import {useAccount, useNetwork, useProvider, useSigner} from 'wagmi'
+import {useAccount, useSigner} from 'wagmi'
 import React, {useEffect, useState} from 'react'
-import {useQuery, useSubscription} from '@apollo/client'
-import {PRIMARY_PROFILE} from '../graphql'
-import {ethers} from 'ethers'
-import {PRIMARY_PROFILE_POSTS} from '../graphql/PrimaryProfilePosts'
 import {useSubscribe} from '../hooks/useSubscribe'
-import {DEFAULT_AVATAR} from '../config/image'
 import {useAppStore} from '../store/app'
 import {encryptWithLit, nftHolderEncryptWithLit} from '../helpers/lit'
-import {blobToHex, pinFileToIPFS, pinJSONToIPFS} from '../helpers'
-import {
-  BellAlertIcon,
-  ChatBubbleBottomCenterIcon,
-  PlusCircleIcon,
-  PlusIcon,
-  UserPlusIcon,
-} from '@heroicons/react/24/outline'
-import {Popover} from '@headlessui/react'
-import {NotifiSubscriptionCard} from '@notifi-network/notifi-react-card'
-import {inputLabels, inputSeparators} from '../config/notifi'
-import {FollowersModal} from '../components/modals/followers'
+import {arrayBufferToHex, blobToHex, hexToArrayBuffer, pinFileToIPFS, pinJSONToIPFS} from '../helpers'
+import {PlusCircleIcon} from '@heroicons/react/24/outline'
 import useListConversations from '../hooks/useListConversations'
-import {ConversationsList} from '../components/conversation-list'
 import {ChatBox} from '../components/chat-box'
 import Moralis from 'moralis'
 import {EvmChain} from '@moralisweb3/evm-utils'
 import {Nft} from '../types/nft'
 import {handleUri} from '../helpers/image'
 import TIM from 'tim-js-sdk'
-import {arrayBuffer2Hex} from '@cyberlab/cyberconnect-v2/lib/crypto'
-import {ab2str} from '../helpers/convertor'
+import {str2ab} from '../helpers/convertor'
 
 export default function Home() {
   const {address, connector} = useAccount()
@@ -95,16 +77,35 @@ export default function Home() {
     )
     const raw = await crypto.subtle.exportKey('raw', key)
 
-    const rawStr = ab2str(raw)
+    const rawStr = arrayBufferToHex(raw)
     const {encryptedSymmetricKey, encryptedString} = await nftHolderEncryptWithLit(
       litClient,
       nft.contractAddress,
       rawStr
     )
-    console.log(rawStr)
-    console.log(encryptedString)
-    console.log('hello')
 
+    console.log('raw', raw)
+    console.log('rawStr', rawStr)
+    console.log(encryptedString)
+
+    const deraw = await crypto.subtle.importKey('raw', hexToArrayBuffer(rawStr), 'AES-CBC', false, [
+      'encrypt',
+      'decrypt',
+    ])
+    console.log('key', hexToArrayBuffer(rawStr))
+    console.log('deraw', deraw)
+    const iv = crypto.getRandomValues(new Uint8Array(16))
+
+    const text = await crypto.subtle.encrypt(
+      {
+        name: 'AES-CBC',
+        iv,
+        length: 128,
+      },
+      deraw,
+      str2ab('2')
+    )
+    console.log(text)
     // const encryptedKeyStr = await encryptedString.text()
     const encryptedKeyStr = await blobToHex(encryptedString)
     console.log(encryptedKeyStr)

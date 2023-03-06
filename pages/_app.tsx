@@ -2,26 +2,31 @@ import '../styles/globals.css'
 import type {AppProps} from 'next/app'
 import '@rainbow-me/rainbowkit/styles.css'
 import {configureChains, createClient, WagmiConfig} from 'wagmi'
-import {publicProvider} from 'wagmi/providers/public'
 import {getDefaultWallets, lightTheme, RainbowKitProvider} from '@rainbow-me/rainbowkit'
 import {Toaster} from 'react-hot-toast'
-import {NftProvider} from 'use-nft'
-import {getDefaultProvider} from 'ethers'
-import {Network} from '@ethersproject/networks'
 import {CHAINS} from '../config/chain'
 import {ApolloProvider} from '@apollo/client'
 import {apolloClient} from '../apollo'
+import {jsonRpcProvider} from 'wagmi/providers/jsonRpc'
+import {Initializer} from '../components/initializer'
+import '@notifi-network/notifi-react-card/dist/index.css'
+import {NotifiInputFieldsText, NotifiInputSeparators} from '@notifi-network/notifi-react-card'
 
-export const mumbai: Network = {
-  name: 'mumbai',
-  chainId: 80001,
-  _defaultProvider: (providers) => new providers.JsonRpcProvider('https://rpc-mumbai.maticvigil.com'),
-}
+// const {chains, provider} = configureChains(CHAINS, [alchemyProvider({apiKey: 'x0IqOekv_eQ-ru9cQExzB1nQVrNwap8t'})])
 
-const {chains, provider} = configureChains(CHAINS, [publicProvider()])
+const {chains, provider} = configureChains(CHAINS, [
+  // alchemyProvider({apiKey: 'x0IqOekv_eQ-ru9cQExzB1nQVrNwap8t'}),
+  // infuraProvider({apiKey: 'f064dd62c6b646a788786d0dfb59623a'}),
+  // publicProvider(),
+  jsonRpcProvider({
+    rpc: (chain) => ({
+      http: `https://rpc.ankr.com/bsc_testnet_chapel/0cb241c8dd80dfa18209f99f12582029a5fd2415371ae2b5a277cd3c8c637c1e`,
+    }),
+  }),
+])
 
 const {connectors} = getDefaultWallets({
-  appName: '0xstarter',
+  appName: '0xLander',
   chains,
 })
 
@@ -31,19 +36,15 @@ const wagmiClient = createClient({
   provider,
 })
 
-const ethersConfig = {
-  provider: getDefaultProvider(mumbai),
-}
-
 export default function App({Component, pageProps}: AppProps) {
   return (
     <ApolloProvider client={apolloClient}>
       <WagmiConfig client={wagmiClient}>
         <RainbowKitProvider chains={chains} theme={lightTheme()} showRecentTransactions={true}>
-          <NftProvider fetcher={['ethers', ethersConfig]}>
+          <Initializer>
             <Toaster />
             <Component {...pageProps} />
-          </NftProvider>
+          </Initializer>
         </RainbowKitProvider>
       </WagmiConfig>
     </ApolloProvider>

@@ -32,12 +32,14 @@ a {
 
 @layer components {
   .bg-primary {
-    background: #1d9bf0;
+    /*background: #1d9bf0;*/
+    background: #ff7900;
     /*background: #ccff00;*/
   }
 
   .text-primary {
-    color: #1d9bf0;
+    /*color: #1d9bf0;*/
+    color: #ff7900;
     /*color: #ccff00;*/
   }
 
@@ -50,7 +52,7 @@ a {
   }
 
   .sidebar {
-    @apply fixed h-full z-30 bg-gray-50 pt-6 border-r border-r-gray-200 left-0 w-[88px] -translate-x-[88px] md:translate-x-0;
+    @apply fixed h-full z-10 bg-gray-50 pt-6 border-r border-r-gray-200 left-0 w-[88px] -translate-x-[88px] md:translate-x-0;
   }
 
   .ml-sidebar {
@@ -85,14 +87,20 @@ a {
   }
 
   .btn-primary {
-    @apply inline-flex items-center w-32 py-3 justify-center rounded-md bg-primary text-white cursor-pointer;
+    @apply inline-flex items-center w-28 py-[11px] justify-center rounded-md bg-primary text-white cursor-pointer;
     @apply disabled:border-slate-300 disabled:opacity-40;
     @apply hover:opacity-90;
     font-size: 14px;
+    letter-spacing: 2px;
   }
 
   .btn-primary:disabled {
     @apply hover:opacity-40;
   }
 
+}
+
+::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+  color: #999;
+  opacity: 1; /* Firefox */
 }

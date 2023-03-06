@@ -1,7 +1,7 @@
-import {chain} from 'wagmi'
 import BigNumber from 'bignumber.js'
+import {polygonMumbai} from '@wagmi/chains'
 
-export function ellipseAddress(address: string | null | undefined, width = 6): string {
+export function ellipseAddress(address: string | null | undefined, width = 4): string {
   if (!address) {
     return ''
   }
@@ -10,7 +10,7 @@ export function ellipseAddress(address: string | null | undefined, width = 6): s
     return address
   }
 
-  return `${address.slice(0, width)}...${address.slice(-width)}`
+  return `${address.slice(0, width + 2)}...${address.slice(-width)}`
 }
 
 export const displayBalance = (balance: any | undefined, decimals?: number, fixed?: number) => {
@@ -26,7 +26,7 @@ export const displayBalance = (balance: any | undefined, decimals?: number, fixe
 
 export const getEtherscanTokenLink = (chainId: number | undefined, address: string | undefined) => {
   switch (chainId) {
-    case chain.polygonMumbai.id:
+    case polygonMumbai.id:
       return `https://mumbai.polygonscan.com/address/${address}`
     default:
       return `https://mumbai.polygonscan.com/address/${address}`

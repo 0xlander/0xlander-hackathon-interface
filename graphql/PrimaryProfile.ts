@@ -11,6 +11,11 @@ export const PRIMARY_PROFILE = gql`
           metadata
           avatar
           isPrimary
+          metadata
+          followerCount
+          followers {
+            totalCount
+          }
         }
       }
     }

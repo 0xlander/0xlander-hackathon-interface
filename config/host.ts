@@ -5,3 +5,7 @@ export const getHost = () => {
   return CC_DEV_HOST
   // return CC_PROD_HOST
 }
+
+export const getAPIHost = () => {
+  return 'https://0xlander-4n3nf7ulb-0xlander.vercel.app/api'
+}

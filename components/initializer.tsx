@@ -22,6 +22,7 @@ import {getAPIHost} from '../config/host'
 import {usePost} from '../hooks/request'
 import {TIM_ACCESS_TOKEN_KEY} from '../config/key'
 import Moralis from 'moralis'
+import {useInterval} from '../hooks/profile'
 
 let initialized = false
 
@@ -61,22 +62,23 @@ export const Initializer = ({children}: {children: ReactNode}): JSX.Element => {
 
   useEffect(() => {
     if (!initialized) {
-      Moralis.start({
-        apiKey: 'QcorwcmEW17WbQWyRqyDAmy3uhX2f8qWYzBnfQ5qVbvXYRy2tw3p2ZcniEDqn18J',
-      })
+      initialized = true
       const init = async () => {
-        const client = new LitJsSdk.LitNodeClient({debug: true})
+        const client = new LitJsSdk.LitNodeClient({debug: false})
         await client.connect()
         console.log('Lit protocol initialized')
         setLitClient(client)
       }
 
       try {
+        Moralis.start({
+          apiKey: 'QcorwcmEW17WbQWyRqyDAmy3uhX2f8qWYzBnfQ5qVbvXYRy2tw3p2ZcniEDqn18J',
+        })
         init()
       } catch (e) {
         console.error(e)
+        initialized = false
       }
-      initialized = true
     }
   })
 
@@ -110,6 +112,7 @@ export const Initializer = ({children}: {children: ReactNode}): JSX.Element => {
 
         let onMessageReceived = function (event: any) {
           const messageList = event.data
+          console.log(event.data)
           messageList.forEach((message: any) => {
             addTimMessages(message.conversationID, [message])
             if (message.type === TIM.TYPES.MSG_TEXT) {
@@ -121,6 +124,10 @@ export const Initializer = ({children}: {children: ReactNode}): JSX.Element => {
 
         tim.on(TIM.EVENT.MESSAGE_RECEIVED, onMessageReceived)
         tim.on(TIM.EVENT.SDK_READY, () => setTimIsReady(true))
+
+        tim.on(TIM.EVENT.CONVERSATION_LIST_UPDATED, (e: any) => {
+          console.log('update', e.data)
+        })
 
         if (localStorage.getItem(TIM_ACCESS_TOKEN_KEY) !== '') {
           let p = tim.login({userID: address, userSig: result.data})
@@ -142,17 +149,20 @@ export const Initializer = ({children}: {children: ReactNode}): JSX.Element => {
     }
   }, [timClient, address])
 
-  useEffect(() => {
-    if (timIsReady) {
-      const res = timClient
-        .getConversationList()
-        .then((res: any) => {
-          console.log('res', res)
-          setTimConversations(res?.data?.conversationList)
-        })
-        .catch((e: Error) => console.error(e))
-    }
-  }, [timIsReady])
+  useInterval(
+    () => {
+      if (timIsReady) {
+        timClient
+          .getConversationList()
+          .then((res: any) => {
+            setTimConversations(res?.data?.conversationList)
+          })
+          .catch((e: Error) => console.error(e))
+      }
+    },
+    2000,
+    true
+  )
 
   const initClient = useCallback(
     async (wallet: Signer) => {
@@ -192,7 +202,11 @@ export const Initializer = ({children}: {children: ReactNode}): JSX.Element => {
 
   useEffect(() => {
     if (address) {
-      initTimClient()
+      try {
+        initTimClient()
+      } catch (e) {
+        console.error(e)
+      }
     }
   }, [address, initTimClient])
 

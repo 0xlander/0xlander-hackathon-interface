@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react'
 import {Layout} from '../components/layout'
 import {useAppStore} from '../store/app'
-import {sleep} from '../helpers'
+import {isJsonString, sleep} from '../helpers'
 import {useLazyQuery, useMutation} from '@apollo/client'
 import {CREATE_SET_METADATA_TYPED_DATA} from '../graphql/CreateSetMetadataTypedData'
 import {useSignTypedData} from 'wagmi'
@@ -9,6 +9,7 @@ import {RELAY} from '../graphql/Relay'
 import {RELAY_ACTION_STATUS} from '../graphql/RelayActionStatus'
 import {ProfileMetadata} from '../types/profile'
 import {Spinner} from '../components/style'
+import {handleCors, handleUri} from '../helpers/image'
 
 const Setting = () => {
   const [email, setEmail] = useState('')
@@ -22,14 +23,32 @@ const Setting = () => {
 
   const [doing, setDoing] = useState(false)
 
-  const metadata: ProfileMetadata | undefined = profile && profile?.metadata && JSON.parse(profile?.metadata)
-  console.log(metadata)
+  const [metadata, setMetadata] = useState<ProfileMetadata>()
 
   useEffect(() => {
     if (metadata) {
       setEmail(metadata.email)
     }
   }, [metadata])
+
+  useEffect(() => {
+    if (profile && profile.metadata) {
+      if (isJsonString(profile.metadata)) {
+        setMetadata(JSON.parse(profile.metadata))
+      } else {
+        const url = `ipfs://${profile.metadata}`
+        fetch(handleCors(handleUri(url) ?? ''), {
+          method: 'GET',
+        })
+          .then((res) => res.json())
+          .then((res) => {
+            console.log(res)
+            setMetadata(res)
+          })
+          .catch((e) => console.error(e))
+      }
+    }
+  }, [profile])
 
   const onSet = async () => {
     setDoing(true)

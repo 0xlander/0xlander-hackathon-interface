@@ -13,6 +13,9 @@ import duration from 'dayjs/plugin/duration'
 dayjs.extend(relativeTime)
 dayjs.extend(duration)
 import {ConversationCard as ConversationCardV2} from './chat'
+import {useQuery} from '@apollo/client'
+import {PRIMARY_PROFILE} from '../graphql'
+import {last} from 'rxjs'
 
 const ConversationCard = ({conversation}: {conversation: Conversation}): JSX.Element | null => {
   const router = useRouter()
@@ -21,18 +24,35 @@ const ConversationCard = ({conversation}: {conversation: Conversation}): JSX.Ele
   const loadingConversations = useAppStore((state) => state.loadingConversations)
   const [recipientAddress, setRecipientAddress] = useState<string>()
 
+  const {loading, data} = useQuery(PRIMARY_PROFILE, {
+    variables: {
+      address: conversation?.peerAddress,
+    },
+    pollInterval: 2000,
+  })
+
+  const profile = data?.address?.wallet?.primaryProfile
+
   useEffect(() => {
-    const routeAddress =
-      (Array.isArray(router.query.recipientWalletAddr)
-        ? router.query.recipientWalletAddr.join('/')
-        : router.query.recipientWalletAddr) ?? ''
-    setRecipientAddress(routeAddress)
+    try {
+      const routeAddress =
+        (Array.isArray(router.query.recipientWalletAddr)
+          ? router.query.recipientWalletAddr.join('/')
+          : router.query.recipientWalletAddr) ?? ''
+      setRecipientAddress(routeAddress)
+    } catch (e) {
+      console.error(e)
+    }
   }, [router.query.recipientWalletAddr])
 
   useEffect(() => {
-    if (!recipientAddress && window.location.pathname.includes('/dm')) {
-      router.push(window.location.pathname)
-      setRecipientAddress(window.location.pathname.replace('/dm/', ''))
+    try {
+      if (!recipientAddress && window.location.pathname.includes('/dm')) {
+        router.push(window.location.pathname)
+        setRecipientAddress(window.location.pathname.replace('/dm/', ''))
+      }
+    } catch (e) {
+      console.error(e)
     }
   }, [recipientAddress, window.location.pathname])
 
@@ -54,16 +74,18 @@ const ConversationCard = ({conversation}: {conversation: Conversation}): JSX.Ele
     router.push(path)
   }
 
-  const content = address === latestMessage?.senderAddress ? 'You: ' : '' + latestMessage?.content
+  const content = address === latestMessage?.senderAddress ? latestMessage?.content : '' + latestMessage?.content
 
   return (
     <ConversationCardV2
       onClick={() => onClick(`/dm/${getConversationKey(conversation)}`)}
       isSelected={isSelected}
       isLoading={loadingConversations}
-      name={ellipseAddress(conversation.peerAddress)}
+      name={profile?.handle ?? ellipseAddress(conversation.peerAddress)}
       date={dayjs(latestMessage?.sent).toNow()}
       content={content}
+      isCyber={!!profile?.handle}
+      isDM={true}
     />
   )
 }
@@ -71,7 +93,6 @@ const ConversationCard = ({conversation}: {conversation: Conversation}): JSX.Ele
 export const ConversationsList = (): JSX.Element => {
   const conversations = useAppStore((state) => state.conversations)
   const previewMessages = useAppStore((state) => state.previewMessages)
-
   const orderByLatestMessage = (convoA: Conversation, convoB: Conversation): number => {
     const convoALastMessageDate = previewMessages.get(getConversationKey(convoA))?.sent || new Date()
     const convoBLastMessageDate = previewMessages.get(getConversationKey(convoB))?.sent || new Date()
@@ -79,7 +100,7 @@ export const ConversationsList = (): JSX.Element => {
   }
 
   if (!conversations || conversations.size == 0) {
-    return <>No Conversations</>
+    return <></>
   }
 
   return (

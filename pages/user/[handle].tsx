@@ -14,11 +14,13 @@ import {useInterval, useProfile} from '../../hooks/profile'
 import {CREATE_SET_SUBSCRIBE_DATA_TYPED_DATA} from '../../graphql/CreateSetSubscribeTypedData'
 import {SubscribesModal} from '../../components/modals/subscribes'
 import {useAppStore} from '../../store/app'
-import {PencilSquareIcon} from '@heroicons/react/24/outline'
+import {PencilIcon, PencilSquareIcon} from '@heroicons/react/24/outline'
 import {FollowButton} from '@cyberconnect/react-follow-button'
 import CyberConnect, {Blockchain, Env} from '@cyberlab/cyberconnect-v2'
 import {GET_PROFILE_BY_ADDRESS} from '../../graphql/GetProfileByAddress'
 import {FollowersModal} from '../../components/modals/followers'
+import {PRIMARY_PROFILE_POSTS} from '../../graphql/PrimaryProfilePosts'
+import {PRIMARY_PROFILE_ESSENCES} from '../../graphql/PrimaryProfileEssences'
 
 const Subscribe = () => {
   const router = useRouter()
@@ -37,14 +39,20 @@ const Subscribe = () => {
   const [openSubModal, setOpenSubModal] = useState(false)
   const [openFollowersModal, setOpenFollowersModal] = useState(false)
 
+  const {data: essencesRes, loading} = useQuery(PRIMARY_PROFILE_ESSENCES, {
+    variables: {
+      address: address,
+      me: address,
+    },
+  })
+  const essences = essencesRes?.address?.wallet?.primaryProfile.essences?.edges
+
   const {data: profile} = useQuery(GET_PROFILE_BY_ADDRESS, {
     variables: {
       address: id,
       me: address,
     },
   })
-
-  console.log('profile', profile)
 
   const onSubscribe = async () => {
     /* Create typed data in a readable format */
@@ -215,14 +223,18 @@ const Subscribe = () => {
                   {/*<div className='btn-primary' onClick={onSet}>*/}
                   {/*  Set*/}
                   {/*</div>*/}
-                  <div className={'flex gap-8 mt-8'}>
-                    <div className=''>
+                  <div className={'flex gap-8 mt-8 grid grid-cols-2'}>
+                    <div className='col-span-1'>
                       <div className={'text-xl'}>{profile?.address?.followingCount}</div>
                       <div className={'text-gray-500'}>Following</div>
                     </div>
-                    <div className='cursor-pointer' onClick={() => setOpenFollowersModal(true)}>
+                    <div className='cursor-pointer col-span-1' onClick={() => setOpenFollowersModal(true)}>
                       <div className={'text-xl'}>{profile?.address?.wallet?.primaryProfile?.followerCount}</div>
                       <div className={'text-gray-500'}>Followers</div>
+                    </div>
+                    <div className='cursor-pointer col-span-1' onClick={() => setOpenFollowersModal(true)}>
+                      <div className={'text-xl'}>{profile?.address?.wallet?.primaryProfile?.followerCount}</div>
+                      <div className={'text-gray-500'}>Subscribers</div>
                     </div>
                     {/*<div className=''>*/}
                     {/*  <div className={'text-xl'}>{postCount}</div>*/}
@@ -271,12 +283,15 @@ const Subscribe = () => {
               </div>
 
               <div className='col-span-2'>
-                <div className={'mt-16'}>
+                <div className={''}>
                   <div>
-                    <div className='flex text-base font-medium mb-8'>Posts</div>
+                    <div className='flex text-2xl font-medium mb-8 items-center'>
+                      Essences
+                      <PencilSquareIcon className={'h-6 w-6 ml-auto'} />
+                    </div>
                   </div>
-                  {posts &&
-                    posts?.map((post: any) => (
+                  {essences &&
+                    essences?.map((post: any) => (
                       <div key={post?.node?.digest} className={'mb-8 border-b border-b-gray-100 pb-8'}>
                         <div className='text-xl mb-2'>{post?.node?.title}</div>
                         {/*<div className='text-sm text-gray-500'>{post?.node?.body}</div>*/}

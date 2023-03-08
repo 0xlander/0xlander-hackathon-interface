@@ -1,7 +1,7 @@
 import {gql} from '@apollo/client'
 
 export const GET_SUBSCRIBERS = gql`
-query GetSubscribers($address: AddressEVM!) {
+  query GetSubscribers($address: AddressEVM!) {
     address(address: $address) {
       wallet {
         primaryProfile {
@@ -9,6 +9,7 @@ query GetSubscribers($address: AddressEVM!) {
           profileID
           handle
           avatar
+          subscribeNFT
           subscriberCount
           subscribers {
             totalCount
@@ -22,13 +23,13 @@ query GetSubscribers($address: AddressEVM!) {
               cursor
               node {
                 wallet {
-                    address
-                    primaryProfile {
-                        handle
-                        owner {
-                          address
-                        }
-                      }
+                  address
+                  primaryProfile {
+                    handle
+                    owner {
+                      address
+                    }
+                  }
                 }
                 profile {
                   owner {

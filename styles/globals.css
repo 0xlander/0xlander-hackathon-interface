@@ -73,6 +73,10 @@ a {
     font-size: 14px;
   }
 
+  .form-group h4 {
+    @apply text-base font-medium;
+  }
+
   .form-group .input:focus {
     box-shadow: none !important;
   }

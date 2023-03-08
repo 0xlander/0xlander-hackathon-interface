@@ -6,7 +6,7 @@ import React, {useEffect, useState} from 'react'
 import {useSubscribe} from '../hooks/useSubscribe'
 import {useAppStore} from '../store/app'
 import {encryptWithLit, nftHolderEncryptWithLit} from '../helpers/lit'
-import {arrayBufferToHex, blobToHex, hexToArrayBuffer, pinFileToIPFS, pinJSONToIPFS} from '../helpers'
+import {arrayBufferToHex, blobToHex, pinFileToIPFS} from '../helpers'
 import {PlusCircleIcon} from '@heroicons/react/24/outline'
 import useListConversations from '../hooks/useListConversations'
 import {ChatBox} from '../components/chat-box'
@@ -15,9 +15,15 @@ import {EvmChain} from '@moralisweb3/evm-utils'
 import {Nft} from '../types/nft'
 import {handleUri} from '../helpers/image'
 import TIM from 'tim-js-sdk'
-import {str2ab} from '../helpers/convertor'
+import {useTownsContract} from '../hooks/contract'
+import BigNumber from 'bignumber.js'
+import {exportAesKey, generateAesKey} from '../helpers/crypto'
+import dayjs from 'dayjs'
+import {toast} from 'react-hot-toast'
+import {useRouter} from 'next/router'
 
 export default function Home() {
+  const router = useRouter()
   const {address, connector} = useAccount()
   const timClient = useAppStore((state) => state.timClient)
   const {data: essences} = useEssence()
@@ -29,8 +35,6 @@ export default function Home() {
 
   const data = useAppStore((state) => state.primaryProfile)
   const primaryProfile: any = data?.address?.wallet?.primaryProfile
-
-  useListConversations()
 
   const conversations = useAppStore((state) => state.conversations)
 
@@ -66,91 +70,64 @@ export default function Home() {
 
   const [nfts, setNfts] = useState<Nft[]>()
 
+  const townsContract = useTownsContract()
+
   const onChat = async (nft: Nft) => {
-    const key = await crypto.subtle.generateKey(
-      {
-        name: 'AES-CBC',
-        length: 128,
-      },
-      true,
-      ['encrypt', 'decrypt'] // key usages
-    )
-    const raw = await crypto.subtle.exportKey('raw', key)
-
-    const rawStr = arrayBufferToHex(raw)
-    const {encryptedSymmetricKey, encryptedString} = await nftHolderEncryptWithLit(
-      litClient,
-      nft.contractAddress,
-      rawStr
-    )
-
-    console.log('raw', raw)
-    console.log('rawStr', rawStr)
-    console.log(encryptedString)
-
-    const deraw = await crypto.subtle.importKey('raw', hexToArrayBuffer(rawStr), 'AES-CBC', false, [
-      'encrypt',
-      'decrypt',
-    ])
-    console.log('key', hexToArrayBuffer(rawStr))
-    console.log('deraw', deraw)
-    const iv = crypto.getRandomValues(new Uint8Array(16))
-
-    const text = await crypto.subtle.encrypt(
-      {
-        name: 'AES-CBC',
-        iv,
-        length: 128,
-      },
-      deraw,
-      str2ab('2')
-    )
-    console.log(text)
-    // const encryptedKeyStr = await encryptedString.text()
-    const encryptedKeyStr = await blobToHex(encryptedString)
-    console.log(encryptedKeyStr)
-
-    const cid = await pinJSONToIPFS({
-      encryptedKey: encryptedKeyStr,
-      encryptedSymmetricKey: encryptedSymmetricKey,
-    })
-
-    const groupId = `nft_${nft.contractAddress}`
-    console.log(rawStr)
-    console.log(
-      JSON.stringify({
-        encryptedKey: encryptedKeyStr,
-        encryptedSymmetricKey: encryptedSymmetricKey,
-      })
-    )
-    try {
-      const res = await timClient.createGroup({
-        name: `${nft.collectionName} Holders`,
-        type: TIM.TYPES.GRP_MEETING,
-        groupID: groupId,
-        memberList: [
-          {
-            userID: address,
-          },
-        ],
-        groupCustomField: [
-          {
-            key: 'key',
-            value: cid,
-          },
-        ],
-        introduction: JSON.stringify({
-          key: cid,
-        }),
+    const tokenId = await townsContract?.holderContractAddress2TokenIds(nft.contractAddress)
+    const chatId = dayjs().unix()
+    if (new BigNumber(tokenId.toString()).gt(0)) {
+      const town = await townsContract?.tokenId2Towns(tokenId.toString())
+      console.log(town)
+      const res = await timClient.joinGroup({
+        groupID: town.chatId,
       })
       console.log(res)
-    } catch (e: any) {
-      console.error(e)
-      if (e?.toString().includes('group id has be used')) {
-        const res = await timClient.joinGroup({
-          groupID: groupId,
+      if (res?.code === 0) {
+        toast.success('Join group successfully')
+        router.push(`/group/GROUP${town.chatId}`)
+      }
+    } else {
+      const key = await generateAesKey()
+      const rawKey = await exportAesKey(key)
+
+      const rawKeyStr = arrayBufferToHex(rawKey)
+      const {encryptedSymmetricKey, encryptedString} = await nftHolderEncryptWithLit(
+        litClient,
+        nft.contractAddress,
+        rawKeyStr
+      )
+
+      const encryptedKeyStr = await blobToHex(encryptedString)
+
+      try {
+        const name = `${nft.collectionName} Holders`
+        const description = `${nft.collectionName} holders group`
+
+        const condition = JSON.stringify({
+          encryptedKey: encryptedKeyStr,
+          encryptedSymmetricKey: encryptedSymmetricKey,
+        })
+        const tx = await townsContract?.mintHolderTown(
+          address,
+          nft.contractAddress,
+          chatId.toString(),
+          name,
+          description,
+          condition
+        )
+        const res = await timClient.createGroup({
+          name: `${nft.collectionName} Holders`,
+          type: TIM.TYPES.GRP_MEETING,
+          groupID: chatId.toString(),
+          memberList: [
+            {
+              userID: address,
+            },
+          ],
         })
         console.log(res)
+      } catch (e) {
+        console.error('create group: ', e)
       }
     }
   }
@@ -166,11 +143,12 @@ export default function Home() {
         })
 
         const filter: Nft[] = response?.result?.map((r) => {
+          const metadata: any = r.metadata
           return {
-            name: r.metadata?.name,
-            collectionName: r.name,
-            tokenId: r.tokenId,
-            image: r.metadata?.image,
+            name: metadata?.name ?? '',
+            collectionName: r.name ?? '',
+            tokenId: r.tokenId.toString(),
+            image: metadata?.image ?? '',
             contractAddress: r.tokenAddress.checksum,
           }
         })

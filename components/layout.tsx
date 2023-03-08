@@ -10,20 +10,27 @@ import {LOGIN_VERIFY} from '../graphql/LoginVerify'
 import {PRIMARY_PROFILE} from '../graphql'
 import {getProfileContractAddress} from '../config/contract'
 import {ProfileNFTABI} from '../config/abis/ProfileNFT'
+import {getImage} from '../helpers/image'
+import {CC_ACCESS_TOKEN_KEY} from '../config/key'
+import {Spinner} from './style'
+import {toast} from 'react-hot-toast'
+import useListConversations from '../hooks/useListConversations'
 
 let handled = false
 
 export const Layout = ({children}: {children: ReactNode}) => {
   const {address} = useAccount()
-  const isLogged = useIsLogged()
+  const {isLogged, isChecked} = useIsLogged()
 
   const [handle, setHandle] = useState('')
+
+  useListConversations()
 
   const {loading, data} = useQuery(PRIMARY_PROFILE, {
     variables: {
       address: address,
     },
-    pollInterval: 10000,
+    pollInterval: 2000,
   })
 
   const hadHandle = !!data?.address?.wallet?.primaryProfile
@@ -33,30 +40,29 @@ export const Layout = ({children}: {children: ReactNode}) => {
 
   const {signMessage} = useSignMessage({
     onSuccess: async (data) => {
-      console.log(data)
       const accessTokenResult = await loginVerify({
         variables: {
           input: {
             address: address,
-            domain: 'test.0xlander.com',
+            domain: '0xlander.com',
             signature: data,
           },
         },
       })
       const accessToken = accessTokenResult?.data?.loginVerify?.accessToken
-      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem(CC_ACCESS_TOKEN_KEY, accessToken)
     },
   })
 
   useEffect(() => {
-    if (!handled && address && !isLogged) {
+    if (!handled && !isLogged && isChecked) {
       handled = true
       const handle = async () => {
         const messageResult = await loginGetMessage({
           variables: {
             input: {
               address: address,
-              domain: 'test.0xlander.com',
+              domain: '0xlander.com',
             },
           },
         })
@@ -68,7 +74,7 @@ export const Layout = ({children}: {children: ReactNode}) => {
 
       handle()
     }
-  }, [])
+  }, [isChecked])
 
   const {config, refetch} = usePrepareContractWrite({
     address: '0x57e12b7a5f38a7f9c23ebd0400e6e53f2a45f271',
@@ -88,39 +94,57 @@ export const Layout = ({children}: {children: ReactNode}) => {
     enabled: false,
   })
 
-  const {write, isLoading, isSuccess} = useContractWrite(config)
+  const {writeAsync, isLoading, isSuccess} = useContractWrite(config)
+
+  const [doing, setDoing] = useState(false)
 
   const onCreate = async () => {
+    setDoing(true)
     await refetch()
     if (handle) {
-      write?.()
+      try {
+        const tx = await writeAsync?.()
+        await tx?.wait()
+        toast.success('Create profile successfully')
+      } catch (e) {
+        console.error(e)
+      }
+      setDoing(false)
     }
   }
 
   return (
     <div className={'min-h-screen'}>
       {!isLogged && (
-        <div className={'flex items-center justify-center'}>
-          <div className='container h-screen'>
-            <ConnectButton />
+        <div className={'min-h-screen flex justify-center items-center'}>
+          <div className={'w-[400px] max-w-full flex flex-col items-center'}>
+            <img src={getImage('logo.png')} alt='logo' className={'mx-auto'} width={300} />
+            <div className='text-sm text-gray-600 text-center mt-2 mb-6'>
+              0xLander，Social based web3 native community homebase, Build, Monetize and DAO
+            </div>
+            <ConnectButton showBalance={true} chainStatus={'none'} />
           </div>
         </div>
       )}
-      {isLogged && !hadHandle && (
-        <>
-          <div className={'flex items-center justify-center'}>
+      {isLogged && !hadHandle && !loading && (
+        <div className={'min-h-screen flex justify-center items-center'}>
+          <div className={'w-[420px] max-w-full'}>
             <div className='container'>
               <div className='flex flex-col gap-6'>
+                <div className='text-4xl font-medium mb-6'>Create Your Profile</div>
                 <div className='form-group'>
+                  <h4>Handle</h4>
+                  <p>Choose your ccProfile handle</p>
                   <input type='text' className={'input'} value={handle} onChange={(e) => setHandle(e.target.value)} />
                 </div>
-                <button className={'btn btn-primary'} onClick={onCreate}>
+                <button className={'btn btn-primary mt-8'} onClick={onCreate} disabled={doing}>
+                  {doing && <Spinner />}
                   Create
                 </button>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
       {isLogged && hadHandle && (
         <>

@@ -1,6 +1,7 @@
 import {getEnv} from './env'
 import type {Conversation, DecodedMessage} from '@xmtp/xmtp-js'
 import {NextRouter} from 'next/router'
+import {isJsonString} from './index'
 
 const ENCODING = 'binary'
 
@@ -72,4 +73,14 @@ export const getAddressFromPath = (router: NextRouter): string => {
   return Array.isArray(router.query.recipientWalletAddr)
     ? router.query.recipientWalletAddr[0]
     : (router.query.recipientWalletAddr as string)
+}
+
+export const getMessageForShow = (content: any) => {
+  if (!isJsonString(content)) return content
+  const js = JSON.parse(content)
+  if (js.type === 'invitation') {
+    return 'Invitation Message'
+  }
+
+  return content
 }

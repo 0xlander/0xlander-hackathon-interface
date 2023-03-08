@@ -15,6 +15,8 @@ import Emoji from 'react-emoji-render'
 import {useAccount} from 'wagmi'
 import MessageComposer from './message-composer'
 import {MessageTile} from './message'
+import {Player, useCreateStream, useUpdateStream} from '@livepeer/react'
+import {create} from 'zustand'
 
 type ConversationProps = {
   recipientWalletAddr: string
@@ -32,6 +34,18 @@ export const Conversation = ({recipientWalletAddr}: ConversationProps): JSX.Elem
   const {convoMessages: messages, hasMore} = useGetMessages(conversationKey, endTime.get(conversationKey))
 
   const loadingConversations = useAppStore((state) => state.loadingConversations)
+
+  const [streamName, setStreamName] = useState('22222222')
+
+  const {mutate: createStream, data: stream, status} = useCreateStream(streamName ? {name: streamName} : null)
+
+  const {mutate: updateStream, error} = useUpdateStream({
+    streamId: stream?.id ?? '',
+    record: true,
+    playbackPolicy: {
+      type: 'public',
+    },
+  })
 
   const fetchNextMessages = useCallback(() => {
     if (hasMore && Array.isArray(messages) && messages.length > 0 && conversationKey) {
@@ -57,6 +71,29 @@ export const Conversation = ({recipientWalletAddr}: ConversationProps): JSX.Elem
           <MessagesList fetchNextMessages={fetchNextMessages} messages={messages ?? []} hasMore={hasMore} />
         </div>
       </div>
+
+      {/*<button*/}
+      {/*  onClick={() => {*/}
+      {/*    updateStream?.()*/}
+      {/*  }}*/}
+      {/*>*/}
+      {/*  updateStream*/}
+      {/*</button>*/}
+
+      {/*<Player title={'22222222'} playbackId={'9f81jnefw5f6gkwk'} autoPlay muted />*/}
+      {/*{stream?.playbackId}*/}
+      {/*{stream?.playbackId && <Player title={stream?.name} playbackId={stream?.playbackId} autoPlay muted />}*/}
+
+      {/*<div>*/}
+      {/*  <button*/}
+      {/*    className={'btn-primary'}*/}
+      {/*    onClick={() => {*/}
+      {/*      createStream?.()*/}
+      {/*    }}*/}
+      {/*  >*/}
+      {/*    Video*/}
+      {/*  </button>*/}
+      {/*</div>*/}
       <MessageComposer onSend={sendMessage} />
     </div>
   )

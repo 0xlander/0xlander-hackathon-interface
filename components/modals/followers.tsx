@@ -1,12 +1,14 @@
 import {Modal} from '../style'
 import {useQuery} from '@apollo/client'
-import {GET_SUBSCRIBERS} from '../../graphql/GetSubscribers'
 import {GET_FOLLOWERS} from '../../graphql/GetFollowers'
 import {useAccount} from 'wagmi'
-import {DEFAULT_AVATAR} from '../../config/image'
 import {ellipseAddress} from '../../helpers/display'
+import {Avatar} from '../avatar'
+import {ChatBubbleLeftIcon} from '@heroicons/react/24/outline'
+import {useRouter} from 'next/router'
 
 export const FollowersModal = ({open, onClose, handle}: {open: boolean; onClose: any; handle: string | undefined}) => {
+  const router = useRouter()
   const {address} = useAccount()
   const {data: followersRes, loading} = useQuery(GET_FOLLOWERS, {
     variables: {
@@ -31,13 +33,20 @@ export const FollowersModal = ({open, onClose, handle}: {open: boolean; onClose:
                   key={follower?.node?.address?.wallet?.primaryProfile?.handle}
                   className={'flex items-center gap-4'}
                 >
-                  <img src={DEFAULT_AVATAR} alt='avatar' className={'rounded-full'} width={48} height={48} />
+                  <Avatar address={follower?.node?.address?.address} size={9} />
                   <div>
                     <div className={'text-lg font-medium'}>
                       {follower?.node?.address?.wallet?.primaryProfile?.handle}
                     </div>
                     <div className={'text-sm text-gray-500'}>{ellipseAddress(follower?.node?.address?.address)}</div>
                   </div>
+                  <ChatBubbleLeftIcon
+                    className={'h-5 w-5 cursor-pointer ml-auto'}
+                    onClick={() => {
+                      router.push(`/dm/${follower?.node?.address?.address}`)
+                      onClose()
+                    }}
+                  />
                 </div>
               ))}
           </div>

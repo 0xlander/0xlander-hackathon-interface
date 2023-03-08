@@ -11,6 +11,7 @@ import {jsonRpcProvider} from 'wagmi/providers/jsonRpc'
 import {Initializer} from '../components/initializer'
 import '@notifi-network/notifi-react-card/dist/index.css'
 import {NotifiInputFieldsText, NotifiInputSeparators} from '@notifi-network/notifi-react-card'
+import {createReactClient, LivepeerConfig, studioProvider} from '@livepeer/react'
 
 // const {chains, provider} = configureChains(CHAINS, [alchemyProvider({apiKey: 'x0IqOekv_eQ-ru9cQExzB1nQVrNwap8t'})])
 
@@ -36,14 +37,22 @@ const wagmiClient = createClient({
   provider,
 })
 
+const livepeerClient = createReactClient({
+  provider: studioProvider({
+    apiKey: '55d2c0e2-1561-4acb-8ddf-2b68f483be32',
+  }),
+})
+
 export default function App({Component, pageProps}: AppProps) {
   return (
     <ApolloProvider client={apolloClient}>
       <WagmiConfig client={wagmiClient}>
         <RainbowKitProvider chains={chains} theme={lightTheme()} showRecentTransactions={true}>
           <Initializer>
-            <Toaster />
-            <Component {...pageProps} />
+            <LivepeerConfig client={livepeerClient}>
+              <Toaster />
+              <Component {...pageProps} />
+            </LivepeerConfig>
           </Initializer>
         </RainbowKitProvider>
       </WagmiConfig>

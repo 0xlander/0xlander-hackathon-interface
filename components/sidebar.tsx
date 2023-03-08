@@ -1,18 +1,17 @@
 import {useRouter} from 'next/router'
-import {BellAlertIcon, ChatBubbleOvalLeftEllipsisIcon, Cog6ToothIcon, UserIcon} from '@heroicons/react/24/outline'
+import {BellAlertIcon, ChatBubbleOvalLeftEllipsisIcon, Cog6ToothIcon} from '@heroicons/react/24/outline'
 import {useQuery} from '@apollo/client'
 import {PRIMARY_PROFILE} from '../graphql'
 import {useAccount} from 'wagmi'
 import {
   ChatBubbleOvalLeftEllipsisIcon as ActiveChatBubbleOvalLeftEllipsisIcon,
-  UserIcon as ActiveUserIcon,
   Cog6ToothIcon as ActiveCog6ToothIcon,
 } from '@heroicons/react/24/solid'
-import {DEFAULT_AVATAR} from '../config/image'
 import {Popover} from '@headlessui/react'
-import {NotifiInputFieldsText, NotifiInputSeparators, NotifiSubscriptionCard} from '@notifi-network/notifi-react-card'
+import {NotifiSubscriptionCard} from '@notifi-network/notifi-react-card'
 import React from 'react'
 import {inputLabels, inputSeparators} from '../config/notifi'
+import {Avatar} from './avatar'
 
 export const Sidebar = () => {
   const router = useRouter()
@@ -55,7 +54,7 @@ export const Sidebar = () => {
   return (
     <div className={'sidebar flex flex-col items-center'}>
       <div className={'text-center'} onClick={() => router.push(`/user/${address}`)}>
-        <img src={DEFAULT_AVATAR} width={38} height={38} className={'rounded-full'} alt='' />
+        <Avatar size={10} address={address} />
         <div className={'text-xs text-gray-600 mt-1'}>{profile?.address?.wallet?.primaryProfile?.handle}</div>
       </div>
       <div className={'my-6'} />

@@ -216,15 +216,19 @@ const Group = () => {
         const k = await importAesKey(hexToArrayBuffer(localStorage.getItem(chatId) ?? ''))
         setSymKey(k)
       } else {
-        const key = await nftHolderDecryptWithLit(
-          litClient,
-          encryptedSymmetricKey,
-          handleEncryptedKey,
-          town.contractAddress
-        )
-        localStorage.setItem(chatId, key)
-        const k = await importAesKey(hexToArrayBuffer(key))
-        setSymKey(k)
+        try {
+          const key = await nftHolderDecryptWithLit(
+            litClient,
+            encryptedSymmetricKey,
+            handleEncryptedKey,
+            town.contractAddress
+          )
+          localStorage.setItem(chatId, key)
+          const k = await importAesKey(hexToArrayBuffer(key))
+          setSymKey(k)
+        } catch (e) {
+          console.error(e)
+        }
       }
       setCanJoin(true)
       setDoing(false)

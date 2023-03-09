@@ -67,7 +67,7 @@ const LivestreamModal = ({open, onClose, stream}: {open: boolean; onClose: any; 
       // @ts-ignore
       // videoEl.current?.setNativeProps({paused: false})
       try {
-        videoEl.current?.play()
+        ;(videoEl.current as any).play()
       } catch (e) {
         console.error(e)
       }

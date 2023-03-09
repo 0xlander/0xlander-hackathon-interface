@@ -108,7 +108,7 @@ export const Layout = ({children}: {children: ReactNode}) => {
         await tx?.wait()
         toast.success('Create profile successfully')
       } catch (e) {
-        console.error(e)
+        console.error('create', e)
       }
       setDoing(false)
     }

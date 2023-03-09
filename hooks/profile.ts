@@ -9,7 +9,7 @@ export const usePrimaryProfile = () => {
   const {address} = useAccount()
 
   return useContractRead({
-    address: getProfileContractAddress(),
+    address: getProfileContractAddress() as any,
     abi: ProfileNFTABI,
     functionName: 'getPrimaryProfile',
     args: [address],
@@ -19,87 +19,12 @@ export const usePrimaryProfile = () => {
 
 export const useHandleByProfileId = (profileId: String | undefined) => {
   return useContractRead({
-    address: getProfileContractAddress(),
+    address: getProfileContractAddress() as any,
     abi: ProfileNFTABI,
     functionName: 'getHandleByProfileId',
     args: [profileId],
     enabled: Boolean(profileId),
   })
-}
-
-export const useProfile = (handle: string | undefined) => {
-  const query = gql`
-    query getProfileByHandle($handle: String!) {
-      profileByHandle(handle: $handle) {
-        metadataInfo {
-          avatar
-          bio
-        }
-        owner {
-          address
-        }
-        isPrimary
-        followerCount
-        followers {
-          totalCount
-          pageInfo {
-            endCursor
-          }
-          edges {
-            node {
-              profile {
-                handle
-                owner {
-                  address
-                }
-              }
-              address {
-                address
-                chainID
-                wallet {
-                  primaryProfile {
-                    handle
-                  }
-                  address
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `
-
-  const [data, setData] = useState<any>()
-
-  const fn = useCallback(
-    (signature: string) => {
-      return request({
-        url: getHost(),
-        document: query,
-        requestHeaders: {
-          'X-API-KEY': 'bdC7j6h8wu22IuisWTIPa0ffW1UMgP81',
-        },
-        variables: {
-          handle: 'aaronlee',
-        },
-      })
-        .then((data) => {
-          setData(data)
-        })
-        .catch((e) => console.error(e))
-    },
-    [handle]
-  )
-
-  useEffect(() => {
-    if (fn && handle) {
-      console.log(handle)
-      fn(handle)
-    }
-  }, [handle])
-
-  return {data}
 }
 
 export const useInterval = (callback: () => void, delay: number, immediately: boolean) => {

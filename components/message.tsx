@@ -8,7 +8,7 @@ import {Avatar} from './avatar'
 import {toast} from 'react-hot-toast'
 import {useAppStore} from '../store/app'
 import {useRouter} from 'next/router'
-import {Spinner} from './style'
+import {Modal, Spinner} from './style'
 import {Player} from '@livepeer/react'
 import {PlayIcon} from '@heroicons/react/24/outline'
 import {Client} from '@livepeer/webrtmp-sdk'
@@ -17,61 +17,41 @@ import {Dialog, Transition} from '@headlessui/react'
 
 type MessageTileProps = {
   message: MessageInterface
+  isDecrypted?: boolean
 }
 
 const LivestreamModal = ({open, onClose, stream}: {open: boolean; onClose: any; stream: any}) => {
   const videoEl = useRef(null)
   const streamEl = useRef(null)
-  const [finished, setFinished] = useState(false)
 
-  useInterval(async () => {}, 2000, true)
-
-  // useEffect(() => {
-  //   videoEl.current.src = 'https://sample-videos.com/video123/mp4/240/big_buck_bunny_240p_10mb.mp4'
-  // }, [])
-
-  useEffect(() => {
-    ;(async () => {
-      return
-      // @ts-ignore
-      videoEl.current.volume = 0
-
-      stream.current = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      })
-
-      // @ts-ignore
-      videoEl.current.srcObject = stream.current
-      // @ts-ignore
-      videoEl.current.play()
-      return
-      // if (finished) return
-      // @ts-ignore
-      videoEl.current = {volume: 0}
-
-      // @ts-ignore
-      streamEl.current = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      })
-      setFinished(true)
-
-      // @ts-ignore
-      videoEl.current = {
-        volume: 0,
-        srcObject: streamEl.current,
-      }
-      console.log(videoEl)
-      // videoEl.current.srcObject = streamEl.current
-      // @ts-ignore
-      // videoEl.current?.setNativeProps({paused: false})
+  useInterval(
+    async () => {
       try {
-        ;(videoEl.current as any).play()
+        // @ts-ignore
+        videoEl.current = {
+          volume: 0,
+        }
+
+        // @ts-ignore
+        streamEl.current = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        })
+
+        // @ts-ignore
+        videoEl.current.srcObject = streamEl.current
+        // @ts-ignore
+        // videoEl.current.play()
       } catch (e) {
         console.error(e)
       }
-    })()
+    },
+    2000,
+    true
+  )
+
+  useEffect(() => {
+    ;(async () => {})()
   }, [])
 
   const onStart = async () => {
@@ -103,48 +83,39 @@ const LivestreamModal = ({open, onClose, stream}: {open: boolean; onClose: any; 
     }
   }
 
-  return (
-    <>
-      <Transition appear show={open} as={Fragment}>
-        <Dialog as='div' className='relative z-10' onClose={onClose}>
-          <Transition.Child
-            as={Fragment}
-            enter='ease-out duration-300'
-            enterFrom='opacity-0'
-            enterTo='opacity-100'
-            leave='ease-in duration-200'
-            leaveFrom='opacity-100'
-            leaveTo='opacity-0'
-          >
-            <div className='fixed inset-0 bg-black bg-opacity-70' />
-          </Transition.Child>
+  const [begin, setBegin] = useState(false)
+  useInterval(
+    () => {
+      setBegin(true)
+    },
+    20000,
+    false
+  )
 
-          <div className='fixed inset-0 overflow-y-auto'>
-            <div className='flex min-h-full items-center justify-center p-4 text-center'>
-              <Transition.Child
-                as={Fragment}
-                enter='ease-out duration-300'
-                enterFrom='opacity-0 scale-95'
-                enterTo='opacity-100 scale-100'
-                leave='ease-in duration-200'
-                leaveFrom='opacity-100 scale-100'
-                leaveTo='opacity-0 scale-95'
-              >
-                <Dialog.Panel className='w-full max-w-xl transform overflow-hidden rounded-2xl bg-white p-10 text-left align-middle shadow-xl transition-all'>
-                  <div>{stream?.name}</div>
-                  <video autoPlay id={'video'} className='App-video' ref={videoEl} />
-                  <button onClick={onStart}>Start</button>
-                </Dialog.Panel>
-              </Transition.Child>
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      content={
+        <>
+          <div>Livestream</div>
+          {/*<video autoPlay id={'video'} className='App-video' ref={videoEl} />*/}
+          {!begin && (
+            <div className={'flex justify-center items-center w-[300px] h-[200px] bg-gray-200'}>
+              <Spinner />
             </div>
-          </div>
-        </Dialog>
-      </Transition>
-    </>
+          )}
+          {begin && <Player title={stream?.name} playbackId={stream?.playbackId} autoPlay />}
+          <button onClick={onStart} className={'mt-4'}>
+            Start
+          </button>
+        </>
+      }
+    />
   )
 }
 
-export const MessageTile = ({message}: MessageTileProps): JSX.Element => {
+export const MessageTile = ({message, isDecrypted}: MessageTileProps): JSX.Element => {
   const videoEl = useRef(null)
   const streamEl = useRef(null)
 
@@ -184,6 +155,7 @@ export const MessageTile = ({message}: MessageTileProps): JSX.Element => {
     }
 
     if (j.type === 'livestream') {
+      console.log(j)
       const stream = j.stream
       if (address === message.sender) {
         setStream(j.stream)
@@ -191,11 +163,13 @@ export const MessageTile = ({message}: MessageTileProps): JSX.Element => {
           <>
             <div>Start your livestream</div>
             <div>{stream.streamKey}</div>
-            <PlayIcon className={'h-8 w-8 cursor-pointer'} onClick={() => setOpen(true)} />
+            <PlayIcon onClick={() => setOpen(true)} />
           </>
         )
+        setIsLivestream(true)
         return
       }
+      console.log(222222222222)
       setContent(
         <div className={'w-[420px]'}>
           <div>{stream.streamKey}</div>
@@ -210,7 +184,7 @@ export const MessageTile = ({message}: MessageTileProps): JSX.Element => {
       return
     }
     const handle = async () => {
-      if (j.iv) {
+      if (j.iv && isDecrypted) {
         const c = await crypto.subtle.decrypt(
           {name: 'AES-CBC', iv: hexToArrayBuffer(j?.iv)},
           message.key,
@@ -243,6 +217,66 @@ export const MessageTile = ({message}: MessageTileProps): JSX.Element => {
     }
     setDoing(false)
   }
+
+  useEffect(() => {
+    ;(async () => {
+      return
+      if (!isLivestream) return
+      try {
+        // @ts-ignore
+        videoEl.current = {
+          volume: 0,
+        }
+
+        // @ts-ignore
+        streamEl.current = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        })
+
+        // @ts-ignore
+        videoEl.current.srcObject = streamEl.current
+        console.log(videoEl)
+        // @ts-ignore
+        // videoEl.current = {autoplay: true}
+        // @ts-ignore
+        videoEl.current.autoplay = true
+        // @ts-ignore
+        // videoEl.current.play()
+      } catch (e) {
+        console.error(e)
+      }
+    })()
+  }, [])
+
+  useInterval(
+    async () => {
+      return
+      if (!isLivestream) return
+      try {
+        // @ts-ignore
+        videoEl.current = {
+          volume: 0,
+        }
+
+        // @ts-ignore
+        streamEl.current = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        })
+
+        // @ts-ignore
+        videoEl.current.srcObject = streamEl.current
+        console.log(videoEl)
+        // @ts-ignore
+        videoEl.current.play()
+      } catch (e) {
+        console.error(e)
+      }
+    },
+    2000,
+    true
+  )
 
   return (
     <div className={`flex items-start mx-auto gap-2 mb-4 ${isSelf ? 'flex-row-reverse pr-4' : 'pl-2'}`}>

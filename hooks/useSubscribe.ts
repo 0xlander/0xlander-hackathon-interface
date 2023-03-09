@@ -33,7 +33,7 @@ export const usePosts = (address: string | undefined) => {
   })
 
   useEffect(() => {
-    startPolling(3000)
+    startPolling(5000)
     return () => stopPolling()
   }, [])
 

@@ -6,6 +6,7 @@ import {ellipseAddress} from '../../helpers/display'
 import {Avatar} from '../avatar'
 import {ChatBubbleLeftIcon} from '@heroicons/react/24/outline'
 import {useRouter} from 'next/router'
+import {ChatWithAddress} from '../chat-with-address'
 
 export const SubscribesModal = ({
   open,
@@ -40,13 +41,7 @@ export const SubscribesModal = ({
                   <div className={'text-lg font-medium'}>{sub?.node?.wallet?.primaryProfile?.handle}</div>
                   <div className={'text-sm text-gray-500'}>{ellipseAddress(sub?.node?.wallet?.address)}</div>
                 </div>
-                <ChatBubbleLeftIcon
-                  className={'h-5 w-5 cursor-pointer ml-auto'}
-                  onClick={() => {
-                    router.push(`/dm/${sub?.node?.wallet?.address}`)
-                    onClose()
-                  }}
-                />
+                <ChatWithAddress address={sub?.node?.wallet?.address} onCallback={onClose} />
               </div>
             ))}
         </>

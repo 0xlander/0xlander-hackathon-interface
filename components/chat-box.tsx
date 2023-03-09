@@ -22,6 +22,7 @@ import {Spinner} from './style'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {CreateSubscribersGroupWrapper} from './create-subscribers-group'
 import {JoinGroupModal} from './modals/join-group'
+import {SubscribesModal} from './modals/subscribes'
 
 dayjs.extend(relativeTime)
 
@@ -82,7 +83,7 @@ export const ChatBox = () => {
         handle={primaryProfile?.handle}
       />
       <JoinGroupModal open={openJoin} onClose={() => setOpenJoin(false)} address={address} />
-      <FollowersModal open={openFollowers} onClose={() => setOpenFollowers(false)} handle={primaryProfile?.handle} />
+      <SubscribesModal open={openFollowers} onClose={() => setOpenFollowers(false)} address={address} />
       <div className='text-lg font-medium mb-8 flex items-center justify-between px-6'>
         Conversations
         <Popover className={'relative h-6'}>

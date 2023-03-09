@@ -3,7 +3,10 @@ import {useCallback} from 'react'
 const useSendMessage = (selectedConversation?: Conversation) => {
   const sendMessage = useCallback(
     async (message: string) => {
-      await selectedConversation?.send(message)
+      console.log(message)
+      const res = await selectedConversation?.send(message)
+      console.log(res)
+      console.log(selectedConversation)
     },
     [selectedConversation]
   )

@@ -39,7 +39,6 @@ export const Conversation = ({recipientWalletAddr}: ConversationProps): JSX.Elem
   const [streamName, setStreamName] = useState('22222222')
 
   const {mutateAsync: createStream, data: stream, status} = useCreateStream(streamName ? {name: streamName} : null)
-  console.log(stream)
 
   const {mutate: updateStream, error} = useUpdateStream({
     streamId: stream?.id ?? '',
@@ -84,19 +83,6 @@ export const Conversation = ({recipientWalletAddr}: ConversationProps): JSX.Elem
           <MessagesList fetchNextMessages={fetchNextMessages} messages={messages ?? []} hasMore={hasMore} />
         </div>
       </div>
-
-      {/*<button*/}
-      {/*  onClick={() => {*/}
-      {/*    updateStream?.()*/}
-      {/*  }}*/}
-      {/*>*/}
-      {/*  updateStream*/}
-      {/*</button>*/}
-
-      {/*<Player title={'22222222'} playbackId={'9f81jnefw5f6gkwk'} autoPlay muted />*/}
-      {/*{stream?.playbackId}*/}
-      {/*{stream?.playbackId && <Player title={stream?.name} playbackId={stream?.playbackId} autoPlay muted />}*/}
-      {/*{stream?.rtmpIngestUrl}*/}
 
       <MessageComposer onSend={sendMessage} onVideoClick={onVideoClick} />
     </div>

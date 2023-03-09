@@ -96,9 +96,9 @@ export const isInboxMessage = (content: any) => {
     return true
   }
 
-  if (js.type === 'livestream') {
-    return true
-  }
+  // if (js.type === 'livestream') {
+  //   return true
+  // }
 
   return false
 }

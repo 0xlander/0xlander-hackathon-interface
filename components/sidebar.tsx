@@ -1,5 +1,5 @@
 import {useRouter} from 'next/router'
-import {BellAlertIcon, ChatBubbleOvalLeftEllipsisIcon, Cog6ToothIcon} from '@heroicons/react/24/outline'
+import {BellAlertIcon, BellSnoozeIcon, ChatBubbleOvalLeftEllipsisIcon, Cog6ToothIcon} from '@heroicons/react/24/outline'
 import {useQuery} from '@apollo/client'
 import {PRIMARY_PROFILE} from '../graphql'
 import {useAccount} from 'wagmi'
@@ -80,22 +80,40 @@ export const Sidebar = () => {
         <div className='nav-item cursor-pointer px-8'>
           <Popover className={'relative h-6'}>
             <Popover.Button>
+              <BellSnoozeIcon className={'h-6 w-6'} />
+            </Popover.Button>
+            <Popover.Panel className={'absolute -translate-y-1/2 left-14 mb-full origin-center-right'}>
+              <div
+                className={
+                  'w-[320px] h-[520px] bg-white shadow-gray-300 border border-gray-200 shadow-2xl rounded-xl overflow-y-scroll'
+                }
+              >
+                <NotifiSubscriptionCard
+                  classNames={{
+                    container: 'rounded-2xl',
+                  }}
+                  cardId='a8f12de72d9c4d3896ef2bb0b4261468'
+                  inputLabels={inputLabels}
+                  inputSeparators={inputSeparators}
+                  darkMode={false}
+                />
+              </div>
+            </Popover.Panel>
+          </Popover>
+        </div>
+
+        <div className='nav-item cursor-pointer px-8'>
+          <Popover className={'relative h-6'}>
+            <Popover.Button>
               <BellAlertIcon className={'h-6 w-6'} />
             </Popover.Button>
             <Popover.Panel className={'absolute -translate-y-1/2 left-14 mb-full origin-center-right'}>
               <div
-                className={'w-[320px] h-[400px] bg-white shadow-gray-300 border border-gray-200 shadow-2xl rounded-xl'}
+                className={
+                  'w-[320px] h-[400px] bg-white shadow-gray-300 border border-gray-200 shadow-2xl rounded-xl overflow-y-scroll'
+                }
               >
-                {/*<NotifiSubscriptionCard*/}
-                {/*  classNames={{*/}
-                {/*    container: 'rounded-2xl',*/}
-                {/*  }}*/}
-                {/*  cardId='a8f12de72d9c4d3896ef2bb0b4261468'*/}
-                {/*  inputLabels={inputLabels}*/}
-                {/*  inputSeparators={inputSeparators}*/}
-                {/*  darkMode={false}*/}
-                {/*/>*/}
-                <div className={'p-6'}>
+                <div className={'p-6 overflow-y-scroll'}>
                   {inbox &&
                     Array.from(inbox.values()).map((message, index: number) => {
                       const js = JSON.parse(message.content)

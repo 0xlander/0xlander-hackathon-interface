@@ -27,6 +27,8 @@ import {Avatar} from '../../components/avatar'
 import CyberConnect, {Env} from '@cyberlab/cyberconnect-v2'
 import {usePosts} from '../../hooks/useSubscribe'
 import {GET_POST_META} from '../../graphql/GetPostMeta'
+import {Switch} from '@headlessui/react'
+import {ChatWithAddress} from '../../components/chat-with-address'
 
 const Post = ({post}: {post: any}) => {
   const {data: signer} = useSigner()
@@ -44,7 +46,7 @@ const Post = ({post}: {post: any}) => {
   })
 
   useEffect(() => {
-    startPolling(3000)
+    startPolling(5000)
     return () => stopPolling()
   }, [])
 
@@ -193,6 +195,8 @@ const Group = () => {
 
   const sub = subscribersRes?.address?.wallet?.primaryProfile
   const [owner, setOwner] = useState('')
+
+  const [isDecrypted, setIsDecrypted] = useState(true)
 
   useEffect(() => {
     const handle = async () => {
@@ -424,6 +428,23 @@ const Group = () => {
         <div className={'w-full pt-12 relative'}>
           <div className='absolute w-full h-[60px] bg-white border-b border-b-gray-200 px-8 flex items-center top-0'>
             {town?.name}
+            <div className={'ml-auto flex items-center gap-2 text-sm'}>
+              <Switch
+                checked={isDecrypted}
+                onChange={() => setIsDecrypted(!isDecrypted)}
+                className={`${
+                  isDecrypted ? 'bg-blue-600' : 'bg-gray-200'
+                } relative inline-flex h-6 w-11 items-center rounded-full`}
+              >
+                <span className='sr-only'>Enable notifications</span>
+                <span
+                  className={`${
+                    isDecrypted ? 'translate-x-6' : 'translate-x-1'
+                  } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                />
+              </Switch>
+              Decrypt
+            </div>
             {fanGroup && owner === address && (
               <button
                 className={'text-primary ml-auto flex items-center gap-2'}
@@ -470,6 +491,7 @@ const Group = () => {
                 return (
                   <div key={message?.ID}>
                     <MessageTile
+                      isDecrypted={isDecrypted}
                       message={{
                         key: symKey,
                         sender: message.from,
@@ -545,10 +567,9 @@ const Group = () => {
                         {ellipseAddress(member.userID)}
                         {member?.role === 'Owner' && <div className={'text-primary text-[11px]'}>Owner</div>}
                       </div>
-                      <ChatBubbleBottomCenterIcon
-                        className={'h-4 w-4 ml-auto cursor-pointer'}
-                        onClick={() => router.push(`/dm/${member.userID}`)}
-                      />
+                      <div className={'ml-auto'}>
+                        <ChatWithAddress address={member.userID} />
+                      </div>
                     </div>
                   )
                 })}

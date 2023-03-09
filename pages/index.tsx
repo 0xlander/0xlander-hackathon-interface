@@ -79,7 +79,7 @@ export default function Home() {
     // })
 
     const r = await client.sendBroadcastMessage(token, {
-      topicName: 'bd',
+      topicName: 'broadcast-id',
       variables: [
         {
           key: 'message',
@@ -125,6 +125,7 @@ export default function Home() {
             </div>
           </div>
         </div>
+        {/*<button onClick={onSendNotifi}>Send</button>*/}
       </div>
     </Layout>
   )

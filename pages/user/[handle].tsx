@@ -134,40 +134,7 @@ const Subscribe = () => {
                     {/*  <div className={'text-gray-500'}>Subscriber</div>*/}
                     {/*</div>*/}
                   </div>
-                  {id !== address && (
-                    // <button
-                    //   className={'btn-primary mt-8'}
-                    //   onClick={() => {
-                    //     const cyberConnect = new CyberConnect({
-                    //       namespace: '0xLander',
-                    //       env: Env.STAGING,
-                    //       provider: signer?.provider,
-                    //       signingMessageEntity: 'CyberConnect',
-                    //     })
-                    //     cyberConnect.follow('gm')
-                    //   }}
-                    // >
-                    //   Follow
-                    // </button>
-                    <SubscribeBtn targetAddress={id} />
-                  )}
-                  {/*<div className={'mt-8'}>*/}
-                  {/*  {address !== id && (*/}
-                  {/*    <FollowButton*/}
-                  {/*      provider={signer?.provider}*/}
-                  {/*      namespace='CyberConnect'*/}
-                  {/*      toAddr={id}*/}
-                  {/*      env={Env.STAGING}*/}
-                  {/*      chain={Blockchain.ETH}*/}
-                  {/*      onSuccess={(e) => {*/}
-                  {/*        console.log(e)*/}
-                  {/*      }}*/}
-                  {/*      onFailure={(e) => {*/}
-                  {/*        console.log(e)*/}
-                  {/*      }}*/}
-                  {/*    />*/}
-                  {/*  )}*/}
-                  {/*</div>*/}
+                  {id !== address && <SubscribeBtn targetAddress={id} />}
                 </div>
               </div>
 
@@ -184,12 +151,7 @@ const Subscribe = () => {
                         <div className='div p-6'>
                           <div className='text-xs text-gray-400'>{nft.collectionName}</div>
                           <div className='text-base font-medium truncate'>{nft.name}</div>
-                          <ChatWithNftHolders nft={nft}>
-                            <div className={'flex mt-6 items-center gap-1 text-sm cursor-pointer text-primary'}>
-                              <PlusCircleIcon className={'h-5 w-5 ml-auto'} />
-                              Chat
-                            </div>
-                          </ChatWithNftHolders>
+                          <ChatWithNftHolders nft={nft} />
                         </div>
                       </div>
                     ))}

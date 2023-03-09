@@ -105,9 +105,7 @@ export const JoinGroupModal = ({
                       <div className={'text-sm text-gray-400'}>{nft.collectionName}</div>
                     </div>
                     <div className={'ml-auto'}>
-                      <ChatWithNftHolders nft={nft}>
-                        <button className={'text-primary text-sm ml-auto'}>Chat</button>
-                      </ChatWithNftHolders>
+                      <ChatWithNftHolders nft={nft} />
                     </div>
                   </div>
                 </div>

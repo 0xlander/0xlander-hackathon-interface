@@ -8,14 +8,12 @@ import {useMutation, useQuery} from '@apollo/client'
 import {LOGIN_GET_MESSAGE} from '../graphql/LoginGetMessage'
 import {LOGIN_VERIFY} from '../graphql/LoginVerify'
 import {PRIMARY_PROFILE} from '../graphql'
-import {getProfileContractAddress} from '../config/contract'
 import {ProfileNFTABI} from '../config/abis/ProfileNFT'
 import {getImage} from '../helpers/image'
 import {CC_ACCESS_TOKEN_KEY} from '../config/key'
 import {Spinner} from './style'
 import {toast} from 'react-hot-toast'
 import useListConversations from '../hooks/useListConversations'
-import {useAppStore} from '../store/app'
 
 let handled = false
 
@@ -121,7 +119,7 @@ export const Layout = ({children}: {children: ReactNode}) => {
           <div className={'w-[400px] max-w-full flex flex-col items-center'}>
             <img src={getImage('logo.png')} alt='logo' className={'mx-auto'} width={300} />
             <div className='text-sm text-gray-600 text-center mt-2 mb-6'>
-              0xLander，Social based web3 native community homebase, Build, Monetize and DAO
+              0xLander，Social based web3 native community homebase
             </div>
             <ConnectButton showBalance={true} chainStatus={'none'} />
           </div>

@@ -6,22 +6,22 @@ import {exportAesKey, generateAesKey} from '../helpers/crypto'
 import {arrayBufferToHex, blobToHex} from '../helpers'
 import {nftHolderEncryptWithLit} from '../helpers/lit'
 import TIM from 'tim-js-sdk'
-import {ReactNode} from 'react'
+import {ReactNode, useState} from 'react'
 import {useTownsContract} from '../hooks/contract'
 import {useAppStore} from '../store/app'
 import {useRouter} from 'next/router'
 import {useAccount} from 'wagmi'
+import {Spinner} from './style'
 
-export const ChatWithNftHolders = ({children, nft}: {children: ReactNode; nft: Nft}) => {
+export const ChatWithNftHolders = ({nft}: {nft: Nft}) => {
   const {address} = useAccount()
   const router = useRouter()
   const townsContract = useTownsContract()
   const timClient = useAppStore((state) => state.timClient)
   const litClient = useAppStore((state) => state.litClient)
+  const [doing, setDoing] = useState(false)
   const onChat = async (nft: Nft) => {
-    console.log(nft.contractAddress)
     const tokenId = await townsContract?.holderContractAddress2TokenIds(nft.contractAddress)
-    console.log(tokenId.toString())
     const chatId = dayjs().unix()
     if (new BigNumber(tokenId.toString()).gt(0)) {
       const town = await townsContract?.tokenId2Towns(tokenId.toString())
@@ -80,5 +80,12 @@ export const ChatWithNftHolders = ({children, nft}: {children: ReactNode; nft: N
     }
   }
 
-  return <div onClick={() => onChat(nft)}>{children}</div>
+  return (
+    <div onClick={() => onChat(nft)}>
+      <button className={'text-primary text-sm ml-auto'} disabled={doing}>
+        {doing && <Spinner />}
+        Chat
+      </button>
+    </div>
+  )
 }

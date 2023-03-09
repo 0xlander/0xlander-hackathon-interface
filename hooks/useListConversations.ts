@@ -56,8 +56,6 @@ export const useListConversations = () => {
         if (isInboxMessage(message.content) && message.senderAddress !== address) {
           addInbox(message.id, message)
           setHasNewInboxMessage(true)
-
-          continue
         }
 
         const numAdded = addMessages(key, [message])

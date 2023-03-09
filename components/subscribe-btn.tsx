@@ -4,14 +4,14 @@ import {CREATE_SET_SUBSCRIBE_DATA_TYPED_DATA} from '../graphql/CreateSetSubscrib
 import {CREATE_SUBSCRIBE_TYPED_DATA} from '../graphql/CreateSubscribeTypedData'
 import {RELAY} from '../graphql/Relay'
 import {RELAY_ACTION_STATUS} from '../graphql/RelayActionStatus'
-import {useAccount} from 'wagmi'
+import {useAccount, useSigner} from 'wagmi'
 import React, {ReactNode, useState} from 'react'
 import {GET_PROFILE_BY_ADDRESS} from '../graphql/GetProfileByAddress'
 import {toast} from 'react-hot-toast'
 import {Spinner} from './style'
 
 export const SubscribeBtn = ({targetAddress}: {targetAddress: string}) => {
-  const [relayId, setRelayId] = useState('')
+  const {data: signer} = useSigner()
 
   const {address} = useAccount()
   const [createSubscribeTypedData] = useMutation(CREATE_SUBSCRIBE_TYPED_DATA)
@@ -37,7 +37,6 @@ export const SubscribeBtn = ({targetAddress}: {targetAddress: string}) => {
         },
       },
     })
-    console.log(profile?.id)
     const typedData = typedDataResult.data?.createSubscribeTypedData?.typedData
     const message = typedData.data
     const typedDataID = typedData.id
@@ -47,7 +46,6 @@ export const SubscribeBtn = ({targetAddress}: {targetAddress: string}) => {
     const method = 'eth_signTypedData_v4'
     // @ts-ignore
     const signature = await signer?.provider?.send(method, params)
-    console.log(signature)
 
     /* Call the relay to broadcast the transaction */
     const relayResult = await relay({
@@ -64,10 +62,14 @@ export const SubscribeBtn = ({targetAddress}: {targetAddress: string}) => {
     const pollRelayActionStatus = async (id: string) => {
       console.log('start polling')
       const relayActionStatusResult = await getRelayActionStatus({
-        variables: {relayActionId: relayId},
+        variables: {relayActionId: id},
         fetchPolicy: 'network-only',
       })
       console.log('relayActionStatusResult', relayActionStatusResult)
+      if (relayActionStatusResult.data.relayActionStatus.txStatus === 'SUCCESS') {
+        toast.success('Subscribe successfully')
+        return
+      }
       if (relayActionStatusResult.data?.relayActionStatus?.txHash) {
         return
       } else if (relayActionStatusResult.data?.relayActionStatus?.reason) {
@@ -80,25 +82,6 @@ export const SubscribeBtn = ({targetAddress}: {targetAddress: string}) => {
     setDoing(false)
     toast.success('Subscribe successfully')
   }
-
-  useInterval(
-    async () => {
-      if (relayId) {
-        const res = await getRelayActionStatus({
-          variables: {relayActionId: relayId},
-          fetchPolicy: 'network-only',
-        })
-
-        console.log('res', res)
-        console.log('res 3000', res.data.relayActionStatus)
-        if (res.data.relayActionStatus.txStatus === 'SUCCESS') {
-          return
-        }
-      }
-    },
-    2000,
-    true
-  )
 
   return (
     <div onClick={onSubscribe}>

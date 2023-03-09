@@ -1,4 +1,4 @@
-import {Modal} from '../style'
+import {Modal, Spinner} from '../style'
 import {useQuery} from '@apollo/client'
 import {GET_SUBSCRIBERS} from '../../graphql/GetSubscribers'
 import {DEFAULT_AVATAR} from '../../config/image'
@@ -29,6 +29,8 @@ export const JoinGroupModal = ({
       address: address,
     },
   })
+
+  const [doing, setDoing] = useState(false)
 
   const subscribers = subscribersRes?.address?.wallet?.primaryProfile?.subscribers?.edges
 
@@ -80,11 +82,7 @@ export const JoinGroupModal = ({
               <div className={'text-sm text-gray-400'}>You have {subscribers?.length} subscribers</div>
             </div>
             <div className={'ml-auto'}>
-              <CreateSubscribersGroupWrapper>
-                <button className={'text-primary text-sm ml-auto'} disabled={subscribers?.length === 0}>
-                  Chat
-                </button>
-              </CreateSubscribersGroupWrapper>
+              <CreateSubscribersGroupWrapper />
             </div>
           </div>
           <div className={'mb-4 mt-8'}>Chat with NFT holders</div>

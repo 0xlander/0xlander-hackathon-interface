@@ -115,12 +115,12 @@ const Post = ({post}: {post: any}) => {
         {data?.content.likedStatus.liked ? (
           <div onClick={onUnlike} className={'inline-flex ml-auto items-center gap-2'}>
             <ActiveHeartIcon className={'h-6 w-6 ml-auto text-red-500'} /> {data?.content.likeCount}
-            {doing && <Spinner />}
+            {doing && <Spinner className={'text-rose-500'} />}
           </div>
         ) : (
           <div onClick={onLike} className={'inline-flex ml-auto items-center gap-2'}>
             <HeartIcon className={'h-6 w-6 ml-auto'} /> {data?.content.likeCount}
-            {doing && <Spinner />}
+            {doing && <Spinner className={'text-rose-500'} />}
           </div>
         )}
       </div>
@@ -181,7 +181,6 @@ const Group = () => {
   const [fanGroup, setFanGroup] = useState(false)
 
   const data = useAppStore((state) => state.primaryProfile)
-  const primaryProfile: any = data?.address?.wallet?.primaryProfile
 
   const xmtpClient = useAppStore((state) => state.xmtpClient)
 
@@ -195,7 +194,6 @@ const Group = () => {
 
   const sub = subscribersRes?.address?.wallet?.primaryProfile
   const [owner, setOwner] = useState('')
-
   const [isDecrypted, setIsDecrypted] = useState(true)
 
   useEffect(() => {
@@ -453,7 +451,7 @@ const Group = () => {
               >
                 <UserPlusIcon className={'h-5 w-5'} />
                 Invite all fans
-                {inviteDoing && <Spinner />}
+                {inviteDoing && <Spinner className={'text-rose-500'} />}
               </button>
             )}
           </div>

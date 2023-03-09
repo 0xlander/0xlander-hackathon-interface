@@ -102,7 +102,7 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => {
       const newInbox = new Map(state.inbox)
       newInbox.set(key, value)
-      return {inbox: newInbox}
+      return {inbox: newInbox, hasNewInboxMessage: true}
     })
   },
   hasNewInboxMessage: false,

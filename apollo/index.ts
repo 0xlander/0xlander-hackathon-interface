@@ -1,6 +1,7 @@
 import {ApolloClient, InMemoryCache, createHttpLink} from '@apollo/client'
 import {setContext} from '@apollo/client/link/context'
 import {getHost} from '../config/host'
+import {CC_ACCESS_TOKEN_KEY} from '../config/key'
 
 const httpLink = createHttpLink({
   // uri: process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT,
@@ -8,14 +9,13 @@ const httpLink = createHttpLink({
 })
 
 const authLink = setContext((_, {headers}) => {
-  const token = localStorage.getItem('accessToken')
+  const token = localStorage.getItem(CC_ACCESS_TOKEN_KEY)
 
   return {
     headers: {
       ...headers,
       Authorization: token ? `bearer ${token}` : '',
-      // 'X-API-KEY': process.env.NEXT_PUBLIC_CYBERCONNECT_API_KEY,
-      'X-API-KEY': 'bdC7j6h8wu22IuisWTIPa0ffW1UMgP81',
+      'X-API-KEY': process.env.NEXT_PUBLIC_CYBERCONNECT_API_KEY,
     },
   }
 })

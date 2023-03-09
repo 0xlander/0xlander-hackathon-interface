@@ -12,8 +12,9 @@ import TIM from 'tim-js-sdk'
 import {useAccount} from 'wagmi'
 import {useAppStore} from '../store/app'
 import {useRouter} from 'next/router'
+import {Spinner} from './style'
 
-export const CreateSubscribersGroupWrapper = ({children}: {children: ReactNode}) => {
+export const CreateSubscribersGroupWrapper = () => {
   const {address} = useAccount()
   const router = useRouter()
   const timClient = useAppStore((state) => state.timClient)
@@ -92,6 +93,8 @@ export const CreateSubscribersGroupWrapper = ({children}: {children: ReactNode})
           condition
         )
 
+        tx.wait()
+
         toast.success(`Create subscribers group successfully`)
         router.push(`/group/GROUP${chatId}`)
       } catch (e) {
@@ -101,5 +104,12 @@ export const CreateSubscribersGroupWrapper = ({children}: {children: ReactNode})
 
     setDoing(false)
   }
-  return <div onClick={onCreateSubscribeGroup}>{children}</div>
+  return (
+    <div onClick={onCreateSubscribeGroup}>
+      <button className={'text-primary text-sm ml-auto flex items-center'} disabled={doing}>
+        {doing && <Spinner className={'text-rose-500'} />}
+        Chat
+      </button>
+    </div>
+  )
 }

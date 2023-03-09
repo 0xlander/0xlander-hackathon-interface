@@ -101,40 +101,17 @@ const Subscribe = () => {
                     </div>
                     <div className='text-sm text-gray-600'>Connect with your web3 frens better</div>
                   </div>
-                  {/*{id !== address && (*/}
-                  {/*  <div className={'ml-auto'}>*/}
-                  {/*    <div className='btn-primary' onClick={onSubscribe}>*/}
-                  {/*      Subscribe*/}
-                  {/*    </div>*/}
-                  {/*  </div>*/}
-                  {/*)}*/}
-                  {/*<div className='btn-primary' onClick={onSet}>*/}
-                  {/*  Set*/}
-                  {/*</div>*/}
                   <div className={'flex gap-8 mt-8 grid grid-cols-2'}>
                     <div className='col-span-1'>
                       <div className={'text-xl'}>{profile?.address?.followingCount}</div>
                       <div className={'text-gray-500'}>Following</div>
                     </div>
-                    {/*<div className='cursor-pointer col-span-1' onClick={() => setOpenFollowersModal(true)}>*/}
-                    {/*  <div className={'text-xl'}>{profile?.address?.wallet?.primaryProfile?.followerCount}</div>*/}
-                    {/*  <div className={'text-gray-500'}>Followers</div>*/}
-                    {/*</div>*/}
                     <div className='cursor-pointer col-span-1' onClick={() => setOpenSubModal(true)}>
                       <div className={'text-xl'}>{subscriberCount}</div>
                       <div className={'text-gray-500'}>Subscribers</div>
                     </div>
-                    {/*<div className=''>*/}
-                    {/*  <div className={'text-xl'}>{postCount}</div>*/}
-                    {/*  <div className={'text-gray-500'}>Posts</div>*/}
-                    {/*</div>*/}
-
-                    {/*<div className='cursor-pointer' onClick={() => setOpenSubModal(true)}>*/}
-                    {/*  <div className={'text-xl'}>{subscriberCount}</div>*/}
-                    {/*  <div className={'text-gray-500'}>Subscriber</div>*/}
-                    {/*</div>*/}
                   </div>
-                  {id !== address && <SubscribeBtn targetAddress={id} />}
+                  {<SubscribeBtn targetAddress={id} />}
                 </div>
               </div>
 

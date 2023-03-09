@@ -17,6 +17,7 @@ export const JoinButton = ({chatId}: {chatId: string}) => {
     if (res?.code === 0) {
       toast.success('Join group successfully')
       router.push(`/group/GROUP${chatId}`)
+      window.location.reload()
     }
     setDoing(false)
   }

@@ -41,7 +41,9 @@ export const SubscribesModal = ({
                   <div className={'text-lg font-medium'}>{sub?.node?.wallet?.primaryProfile?.handle}</div>
                   <div className={'text-sm text-gray-500'}>{ellipseAddress(sub?.node?.wallet?.address)}</div>
                 </div>
-                <ChatWithAddress address={sub?.node?.wallet?.address} onCallback={onClose} />
+                <div className={'ml-auto'}>
+                  <ChatWithAddress address={sub?.node?.wallet?.address} onCallback={onClose} />
+                </div>
               </div>
             ))}
         </>

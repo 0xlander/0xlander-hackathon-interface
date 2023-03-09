@@ -21,6 +21,7 @@ export const ChatWithNftHolders = ({nft}: {nft: Nft}) => {
   const litClient = useAppStore((state) => state.litClient)
   const [doing, setDoing] = useState(false)
   const onChat = async (nft: Nft) => {
+    setDoing(true)
     const tokenId = await townsContract?.holderContractAddress2TokenIds(nft.contractAddress)
     const chatId = dayjs().unix()
     if (new BigNumber(tokenId.toString()).gt(0)) {
@@ -78,12 +79,13 @@ export const ChatWithNftHolders = ({nft}: {nft: Nft}) => {
         console.error('create group: ', e)
       }
     }
+    setDoing(false)
   }
 
   return (
     <div onClick={() => onChat(nft)}>
       <button className={'text-primary text-sm ml-auto'} disabled={doing}>
-        {doing && <Spinner />}
+        {doing && <Spinner className={'text-rose-500'} />}
         Chat
       </button>
     </div>

@@ -10,10 +10,11 @@ import {LOGIN_VERIFY} from '../graphql/LoginVerify'
 import {PRIMARY_PROFILE} from '../graphql'
 import {ProfileNFTABI} from '../config/abis/ProfileNFT'
 import {getImage} from '../helpers/image'
-import {CC_ACCESS_TOKEN_KEY} from '../config/key'
+import {CC_ACCESS_TOKEN_KEY, DOMAIN} from '../config/key'
 import {Spinner} from './style'
 import {toast} from 'react-hot-toast'
 import useListConversations from '../hooks/useListConversations'
+import useIsSSR from '../hooks/contract'
 
 let handled = false
 
@@ -43,7 +44,7 @@ export const Layout = ({children}: {children: ReactNode}) => {
         variables: {
           input: {
             address: address,
-            domain: '0xlander.com',
+            domain: DOMAIN,
             signature: data,
           },
         },
@@ -53,27 +54,24 @@ export const Layout = ({children}: {children: ReactNode}) => {
     },
   })
 
-  useEffect(() => {
-    if (!handled && !isLogged && isChecked) {
-      handled = true
-      const handle = async () => {
-        const messageResult = await loginGetMessage({
-          variables: {
-            input: {
-              address: address,
-              domain: '0xlander.com',
-            },
+  const onSignIn = async () => {
+    try {
+      const messageResult = await loginGetMessage({
+        variables: {
+          input: {
+            address: address,
+            domain: DOMAIN,
           },
-        })
-        const message = messageResult?.data?.loginGetMessage?.message
-        signMessage({
-          message: message,
-        })
-      }
-
-      handle()
+        },
+      })
+      const message = messageResult?.data?.loginGetMessage?.message
+      signMessage({
+        message: message,
+      })
+    } catch (e) {
+      console.error(e)
     }
-  }, [isChecked])
+  }
 
   const {config, refetch} = usePrepareContractWrite({
     address: '0x57e12b7a5f38a7f9c23ebd0400e6e53f2a45f271',
@@ -97,6 +95,8 @@ export const Layout = ({children}: {children: ReactNode}) => {
 
   const [doing, setDoing] = useState(false)
 
+  const isSSR = useIsSSR()
+
   const onCreate = async () => {
     setDoing(true)
     await refetch()
@@ -112,9 +112,13 @@ export const Layout = ({children}: {children: ReactNode}) => {
     }
   }
 
+  if (isSSR) {
+    return <></>
+  }
+
   return (
     <div className={'min-h-screen'}>
-      {!isLogged && (
+      {!address && (
         <div className={'min-h-screen flex justify-center items-center'}>
           <div className={'w-[400px] max-w-full flex flex-col items-center'}>
             <img src={getImage('logo.png')} alt='logo' className={'mx-auto'} width={300} />
@@ -122,6 +126,22 @@ export const Layout = ({children}: {children: ReactNode}) => {
               0xLander，Social based web3 native community homebase
             </div>
             <ConnectButton showBalance={true} chainStatus={'none'} />
+          </div>
+        </div>
+      )}
+
+      {address && !isLogged && (
+        <div className={'min-h-screen flex justify-center items-center'}>
+          <div className={'w-[420px] max-w-full'}>
+            <img src={getImage('logo.png')} alt='logo' className={'mx-auto'} width={300} />
+            <div className='text-sm text-gray-600 text-center mt-2 mb-6'>
+              0xLander，Social based web3 native community homebase
+            </div>
+            <div className={'text-center'}>
+              <button className={'btn-primary'} onClick={onSignIn}>
+                Sign In
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -18,6 +18,7 @@ import {MessageTile} from './message'
 import {Player, useCreateStream, useUpdateStream} from '@livepeer/react'
 import {create} from 'zustand'
 import {steps} from '@motionone/easing'
+import {Avatar} from './avatar'
 
 type ConversationProps = {
   recipientWalletAddr: string
@@ -78,7 +79,11 @@ export const Conversation = ({recipientWalletAddr}: ConversationProps): JSX.Elem
 
   return (
     <div className={'w-full h-screen'}>
-      <div className='bg-white  w-full'>
+      <div className={'bg-white border-b border-b-gray-200 px-8 py-4 flex items-center gap-4'}>
+        <Avatar address={recipientWalletAddr} size={30} />
+        {ellipseAddress(recipientWalletAddr)}
+      </div>
+      <div className='bg-white w-full'>
         <div className='h-full flex justify-between flex-col'>
           <MessagesList fetchNextMessages={fetchNextMessages} messages={messages ?? []} hasMore={hasMore} />
         </div>
@@ -127,7 +132,7 @@ export const MessagesList = ({messages, fetchNextMessages, hasMore}: MessageList
       dataLength={messages.length}
       next={fetchNextMessages}
       className='flex flex-col-reverse overflow-y-auto pl-4'
-      height={width > 700 ? '87vh' : '83vh'}
+      height={width > 700 ? '80vh' : '83vh'}
       inverse
       endMessage={<ConversationBeginningNotice />}
       hasMore={hasMore}

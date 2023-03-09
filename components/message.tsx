@@ -143,8 +143,8 @@ export const MessageTile = ({message, isDecrypted}: MessageTileProps): JSX.Eleme
         <>
           <div>
             <div className={'text-xl mb-2'}>{content?.groupName}</div>
-            <div className={'text-sm mb-4'}>{content?.groupDescription}. You can click button to join group.</div>
-            <button className={'btn-primary'} onClick={onJoin} disabled={doing}>
+            <div className={'text-sm mb-4'}>{content?.groupDescription}You can click button to join group.</div>
+            <button className={'btn-primary'} onClick={() => onJoin(j.chatId)} disabled={doing}>
               {doing && <Spinner />}
               Join
             </button>
@@ -155,7 +155,6 @@ export const MessageTile = ({message, isDecrypted}: MessageTileProps): JSX.Eleme
     }
 
     if (j.type === 'livestream') {
-      console.log(j)
       const stream = j.stream
       if (address === message.sender) {
         setStream(j.stream)
@@ -169,7 +168,6 @@ export const MessageTile = ({message, isDecrypted}: MessageTileProps): JSX.Eleme
         setIsLivestream(true)
         return
       }
-      console.log(222222222222)
       setContent(
         <div className={'w-[420px]'}>
           <div>{stream.streamKey}</div>
@@ -199,21 +197,23 @@ export const MessageTile = ({message, isDecrypted}: MessageTileProps): JSX.Eleme
         }
       }
     }
+
     handle()
   }, [message])
   const isSelf = address === message.sender
 
   const [doing, setDoing] = useState(false)
 
-  const onJoin = async () => {
+  const onJoin = async (chatId: string) => {
     setDoing(true)
+    console.log(content)
     const res = await timClient.joinGroup({
-      groupID: content?.chatId,
+      groupID: chatId,
     })
     console.log(res)
     if (res?.code === 0) {
       toast.success('Join group successfully')
-      router.push(`/group/GROUP${content.chatId}`)
+      router.push(`/group/GROUP${chatId}`)
     }
     setDoing(false)
   }

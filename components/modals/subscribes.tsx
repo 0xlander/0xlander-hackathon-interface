@@ -24,7 +24,6 @@ export const SubscribesModal = ({
   })
 
   const subscribers = subscribersRes?.address?.wallet?.primaryProfile?.subscribers?.edges
-  console.log(subscribers)
 
   return (
     <Modal
@@ -32,7 +31,7 @@ export const SubscribesModal = ({
       onClose={onClose}
       content={
         <>
-          <div className='text-2xl mb-8'>Subscribes</div>
+          <div className='text-2xl mb-8'>Subscribers</div>
           {subscribers &&
             subscribers?.map((sub: any) => (
               <div key={sub?.node?.wallet?.address} className={'flex items-center gap-4 mb-4'}>

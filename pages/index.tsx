@@ -14,6 +14,7 @@ import {UserGroupIcon, UserIcon} from '@heroicons/react/24/outline'
 import {SubscribesModal} from '../components/modals/subscribes'
 import {JoinGroupModal} from '../components/modals/join-group'
 import {SubscriberGroupAvatar} from '../components/subscriber-group-avatar'
+import {getImage} from '../helpers/image'
 
 export default function Home() {
   const router = useRouter()
@@ -104,7 +105,8 @@ export default function Home() {
         <JoinGroupModal open={openJoin} onClose={() => setOpenJoin(false)} address={address} />
         <div className={'p-8 w-full flex items-center justify-center'}>
           <div className={'w-[600px]'}>
-            <div className='flex gap-4 cursor-pointer' onClick={() => setOpenSub(true)}>
+            <img src={getImage('logo')} alt='logo' width={300} />
+            <div className='flex gap-4 cursor-pointer mt-8' onClick={() => setOpenSub(true)}>
               <div className={'w-[48px] h-[48px] rounded-lg bg-blue-500 flex items-center justify-center'}>
                 <UserIcon className={'h-6 w-6 text-white'} />
               </div>

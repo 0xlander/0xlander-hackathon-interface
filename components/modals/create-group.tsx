@@ -8,12 +8,8 @@ import {useTownsContract} from '../../hooks/contract'
 import dayjs from 'dayjs'
 import BigNumber from 'bignumber.js'
 import {toast} from 'react-hot-toast'
-import {exportAesKey, generateAesKey} from '../../helpers/crypto'
-import {arrayBufferToHex, blobToHex} from '../../helpers'
-import {nftHolderEncryptWithLit} from '../../helpers/lit'
 import {useRouter} from 'next/router'
 import {useState} from 'react'
-import fa from '@walletconnect/qrcode-modal/dist/cjs/browser/languages/fa'
 
 export const CreateGroupModal = ({
   open,

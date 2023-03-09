@@ -468,11 +468,35 @@ const Group = () => {
               Overview
             </div>
             <div onClick={() => setType(1)} className={`${type === 1 ? 'text-gray-800' : ''}`}>
-              Forum
+              Posts
             </div>
           </div>
           {type === 1 && (
             <div style={{height: 'calc(100vh-100px)'}} className={'overflow-y-scroll h-[calc(100vh-100px)]'}>
+              <div>
+                <div className='form-group mb-6'>
+                  <input
+                    type='text'
+                    className={'input'}
+                    placeholder={'Type your title'}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                </div>
+                <div className='form-group mb-6'>
+                  <textarea
+                    className={'input'}
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                    placeholder={'Type your content'}
+                  />
+                </div>
+                <div className='flex'>
+                  <button className={'ml-auto btn btn-primary mb-12'} onClick={onPost}>
+                    Post
+                  </button>
+                </div>
+              </div>
               {filterPosts &&
                 filterPosts?.map((post: any) => {
                   return <Post post={post} key={post?.node?.id} />
@@ -486,7 +510,9 @@ const Group = () => {
                 {members?.map((member: any) => {
                   return (
                     <div key={member?.userID} className={'flex items-center gap-3'}>
-                      <Avatar address={member.userId} size={40} />
+                      <div onClick={() => router.push(`/user/${member.userID}`)} className={'cursor-pointer'}>
+                        <Avatar address={member.userID} size={40} />
+                      </div>
                       <div className={'text-sm'}>
                         {ellipseAddress(member.userID)}
                         {member?.role === 'Owner' && <div className={'text-primary text-[11px]'}>Owner</div>}
@@ -498,17 +524,6 @@ const Group = () => {
                     </div>
                   )
                 })}
-              </div>
-              <div>
-                <div className='form-group'>
-                  <input type='text' className={'input'} value={title} onChange={(e) => setTitle(e.target.value)} />
-                </div>
-                <div className='form-group'>
-                  <textarea className={'input'} value={body} onChange={(e) => setBody(e.target.value)} />
-                </div>
-                <button className={'btn btn-primary'} onClick={onPost}>
-                  Post
-                </button>
               </div>
             </>
           )}

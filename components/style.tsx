@@ -45,7 +45,7 @@ export const Spinner = ({className}: {className?: string}) => {
   return (
     <svg
       fill={'none'}
-      className={classNames(className ?? 'text-primary', 'animate-spin h-5 w-5 -ml-1 mr-3')}
+      className={classNames(className ?? 'text-white', 'animate-spin h-5 w-5 -ml-1 mr-3')}
       viewBox='0 0 24 24'
     >
       <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />

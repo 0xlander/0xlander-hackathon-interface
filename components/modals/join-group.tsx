@@ -81,7 +81,9 @@ export const JoinGroupModal = ({
             </div>
             <div className={'ml-auto'}>
               <CreateSubscribersGroupWrapper>
-                <button className={'text-primary text-sm ml-auto'}>Chat</button>
+                <button className={'text-primary text-sm ml-auto'} disabled={subscribers?.length === 0}>
+                  Chat
+                </button>
               </CreateSubscribersGroupWrapper>
             </div>
           </div>

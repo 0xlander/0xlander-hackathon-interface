@@ -126,7 +126,7 @@ export const Initializer = ({children}: {children: ReactNode}): JSX.Element => {
         tim.on(TIM.EVENT.SDK_READY, () => setTimIsReady(true))
 
         tim.on(TIM.EVENT.CONVERSATION_LIST_UPDATED, (e: any) => {
-          console.log('update', e.data)
+          // console.log('update', e.data)
         })
 
         if (localStorage.getItem(TIM_ACCESS_TOKEN_KEY) !== '') {

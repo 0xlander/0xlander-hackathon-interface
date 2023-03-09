@@ -14,6 +14,7 @@ export const GET_PROFILE_BY_ADDRESS = gql`
           postCount
           commentCount
           isFollowedByMe(me: $me)
+          isSubscribedByMe(me: $me)
         }
       }
     }

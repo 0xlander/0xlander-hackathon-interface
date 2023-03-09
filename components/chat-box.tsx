@@ -21,6 +21,7 @@ import {useTownsContract} from '../hooks/contract'
 import {Spinner} from './style'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {CreateSubscribersGroupWrapper} from './create-subscribers-group'
+import {JoinGroupModal} from './modals/join-group'
 
 dayjs.extend(relativeTime)
 
@@ -71,6 +72,8 @@ export const ChatBox = () => {
     }
   }, [timConversations])
 
+  const [openJoin, setOpenJoin] = useState(false)
+
   return (
     <div className={'w-[340px] min-w-[340px] border-r border-r-gray-200 ml-[88px] h-screen pt-8'}>
       <CreateGroupModal
@@ -78,6 +81,7 @@ export const ChatBox = () => {
         onClose={() => setOpenCreateGroup(false)}
         handle={primaryProfile?.handle}
       />
+      <JoinGroupModal open={openJoin} onClose={() => setOpenJoin(false)} address={address} />
       <FollowersModal open={openFollowers} onClose={() => setOpenFollowers(false)} handle={primaryProfile?.handle} />
       <div className='text-lg font-medium mb-8 flex items-center justify-between px-6'>
         Conversations
@@ -92,23 +96,15 @@ export const ChatBox = () => {
                 className={'text-gray-500 text-sm px-6 py-3 flex items-center gap-2 cursor-pointer hover:bg-gray-50'}
               >
                 <ChatBubbleBottomCenterIcon className={'w-4 h-4'} />
-                Chat with
+                Chat with friends
               </div>
               <div
-                onClick={() => setOpenCreateGroup(true)}
+                onClick={() => setOpenJoin(true)}
                 className={'text-gray-500 text-sm px-6 py-3 flex items-center gap-2 cursor-pointer hover:bg-gray-50'}
               >
                 <ChatBubbleLeftIcon className={'w-4 h-4 text-primary'} />
-                Create Group
+                Chat with group
               </div>
-              <CreateSubscribersGroupWrapper>
-                <div
-                  className={'text-gray-500 text-sm px-6 py-3 flex items-center gap-2 cursor-pointer hover:bg-gray-50'}
-                >
-                  <ChatBubbleBottomCenterTextIcon className={'w-4 h-4 text-rose-500'} />
-                  Subscribers Group ({sub?.subscriberCount}){doing && <Spinner />}
-                </div>
-              </CreateSubscribersGroupWrapper>
             </div>
           </Popover.Panel>
         </Popover>

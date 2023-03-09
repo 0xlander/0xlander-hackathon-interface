@@ -5,7 +5,6 @@ import {
   ChatBubbleLeftIcon,
   PlusCircleIcon,
 } from '@heroicons/react/24/outline'
-import {InboxIcon} from '@heroicons/react/24/solid'
 import {ConversationsList} from './conversation-list'
 import React, {useEffect, useState} from 'react'
 import {FollowersModal} from './modals/followers'
@@ -18,14 +17,10 @@ import {useQuery} from '@apollo/client'
 import {GET_SUBSCRIBERS} from '../graphql/GetSubscribers'
 import {useAccount} from 'wagmi'
 import BigNumber from 'bignumber.js'
-import {toast} from 'react-hot-toast'
-import {exportAesKey, generateAesKey} from '../helpers/crypto'
-import {arrayBufferToHex, blobToHex} from '../helpers'
-import {nftHolderEncryptWithLit} from '../helpers/lit'
-import TIM from 'tim-js-sdk'
 import {useTownsContract} from '../hooks/contract'
 import {Spinner} from './style'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import {CreateSubscribersGroupWrapper} from './create-subscribers-group'
 
 dayjs.extend(relativeTime)
 
@@ -38,8 +33,6 @@ export const ChatBox = () => {
   const data = useAppStore((state) => state.primaryProfile)
   const primaryProfile: any = data?.address?.wallet?.primaryProfile
   const timConversations = useAppStore((state) => state.timConversations)
-  const timClient = useAppStore((state) => state.timClient)
-  const litClient = useAppStore((state) => state.litClient)
   const [doing, setDoing] = useState(false)
 
   const {data: subscribersRes, loading} = useQuery(GET_SUBSCRIBERS, {
@@ -51,76 +44,6 @@ export const ChatBox = () => {
   const sub = subscribersRes?.address?.wallet?.primaryProfile
 
   const townsContract = useTownsContract()
-  const onCreateSubscribeGroup = async () => {
-    setDoing(true)
-    if (sub?.subscribeCount === 0) {
-      toast.success('You have no subscribers')
-      return
-    }
-    const contractAddress = sub?.subscribeNFT
-    if (!contractAddress) return
-    const tokenId = await townsContract?.holderContractAddress2TokenIds(contractAddress)
-    const chatId = dayjs().unix()
-    if (new BigNumber(tokenId.toString()).gt(0)) {
-      const town = await townsContract?.tokenId2Towns(tokenId.toString())
-      const res = await timClient.joinGroup({
-        groupID: town.chatId,
-      })
-      console.log(res)
-      if (res?.code === 0) {
-        toast.success('Join group successfully')
-        router.push(`/group/GROUP${town.chatId}`)
-      }
-    } else {
-      const key = await generateAesKey()
-      const rawKey = await exportAesKey(key)
-
-      const rawKeyStr = arrayBufferToHex(rawKey)
-      const {encryptedSymmetricKey, encryptedString} = await nftHolderEncryptWithLit(
-        litClient,
-        contractAddress,
-        rawKeyStr
-      )
-
-      const encryptedKeyStr = await blobToHex(encryptedString)
-
-      try {
-        const name = `${primaryProfile?.handle} fans`
-        const description = `${name} group`
-
-        const condition = JSON.stringify({
-          encryptedKey: encryptedKeyStr,
-          encryptedSymmetricKey: encryptedSymmetricKey,
-        })
-        const res = await timClient.createGroup({
-          name: name,
-          type: TIM.TYPES.GRP_MEETING,
-          groupID: chatId.toString(),
-          memberList: [
-            {
-              userID: address,
-            },
-          ],
-        })
-        console.log(res)
-        const tx = await townsContract?.mintHolderTown(
-          address,
-          contractAddress,
-          chatId.toString(),
-          name,
-          description,
-          condition
-        )
-
-        toast.success(`Create subscribers group successfully`)
-        router.push(`/group/GROUP${chatId}`)
-      } catch (e) {
-        console.error('create group: ', e)
-      }
-    }
-
-    setDoing(false)
-  }
 
   const [filterConversations, setFilterConversations] = useState<any[]>()
 
@@ -178,13 +101,14 @@ export const ChatBox = () => {
                 <ChatBubbleLeftIcon className={'w-4 h-4 text-primary'} />
                 Create Group
               </div>
-              <div
-                onClick={onCreateSubscribeGroup}
-                className={'text-gray-500 text-sm px-6 py-3 flex items-center gap-2 cursor-pointer hover:bg-gray-50'}
-              >
-                <ChatBubbleBottomCenterTextIcon className={'w-4 h-4 text-rose-500'} />
-                Subscribers Group ({sub?.subscriberCount}){doing && <Spinner />}
-              </div>
+              <CreateSubscribersGroupWrapper>
+                <div
+                  className={'text-gray-500 text-sm px-6 py-3 flex items-center gap-2 cursor-pointer hover:bg-gray-50'}
+                >
+                  <ChatBubbleBottomCenterTextIcon className={'w-4 h-4 text-rose-500'} />
+                  Subscribers Group ({sub?.subscriberCount}){doing && <Spinner />}
+                </div>
+              </CreateSubscribersGroupWrapper>
             </div>
           </Popover.Panel>
         </Popover>

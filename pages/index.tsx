@@ -10,6 +10,10 @@ import {pinFileToIPFS} from '../helpers'
 import {ChatBox} from '../components/chat-box'
 import {useRouter} from 'next/router'
 import {createGraphQLClient, createNotifiService, NotifiClient, NotifiEnvironment} from '@notifi-network/notifi-node'
+import {UserGroupIcon, UserIcon} from '@heroicons/react/24/outline'
+import {SubscribesModal} from '../components/modals/subscribes'
+import {JoinGroupModal} from '../components/modals/join-group'
+import {SubscriberGroupAvatar} from '../components/subscriber-group-avatar'
 
 export default function Home() {
   const router = useRouter()
@@ -89,25 +93,35 @@ export default function Home() {
     })
   }
 
+  const [openSub, setOpenSub] = useState(false)
+  const [openJoin, setOpenJoin] = useState(false)
+
   return (
     <Layout>
       <div className='flex'>
         <ChatBox />
-        <div className={'p-8 w-full'}>
-          {/*<div className={'flex items-center'}>*/}
-          {/*  <div className='text-xl'>Subscribe</div>*/}
-          {/*</div>*/}
-          {/*<div className='form-group'>*/}
-          {/*  <input type='text' className={'input'} value={title} onChange={(e) => setTitle(e.target.value)} />*/}
-          {/*</div>*/}
-          {/*<div className='form-group'>*/}
-          {/*  <textarea className={'input'} value={body} onChange={(e) => setBody(e.target.value)} />*/}
-          {/*</div>*/}
-          {/*<button className={'btn btn-primary'} onClick={onPost}>*/}
-          {/*  Post*/}
-          {/*</button>*/}
+        <SubscribesModal open={openSub} onClose={() => setOpenSub(false)} address={address} />
+        <JoinGroupModal open={openJoin} onClose={() => setOpenJoin(false)} address={address} />
+        <div className={'p-8 w-full flex items-center justify-center'}>
+          <div className={'w-[600px]'}>
+            <div className='flex gap-4 cursor-pointer' onClick={() => setOpenSub(true)}>
+              <div className={'w-[48px] h-[48px] rounded-lg bg-blue-500 flex items-center justify-center'}>
+                <UserIcon className={'h-6 w-6 text-white'} />
+              </div>
+              <div>
+                <div className='text-base font-medium'>Chat with friends</div>
+                <div className='text-sm text-gray-500'>Chat with your follower or subscriber</div>
+              </div>
+            </div>
 
-          {/*<button onClick={onSendNotifi}>Send</button>*/}
+            <div className='flex gap-4 mt-8 cursor-pointer' onClick={() => setOpenJoin(true)}>
+              <SubscriberGroupAvatar />
+              <div>
+                <div className='text-base font-medium'>Chat with group</div>
+                <div className='text-sm text-gray-500'>Chat with your subscribers and nft holders</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </Layout>

@@ -32,6 +32,7 @@ import {arrayBufferToHex, blobToHex} from '../../helpers'
 import {nftHolderEncryptWithLit} from '../../helpers/lit'
 import TIM from 'tim-js-sdk'
 import {useTownsContract} from '../../hooks/contract'
+import {ChatWithNftHolders} from '../../components/chat-with-nft-holders'
 
 const Subscribe = () => {
   const router = useRouter()
@@ -156,68 +157,6 @@ const Subscribe = () => {
   const townsContract = useTownsContract()
   const timClient = useAppStore((state) => state.timClient)
   const litClient = useAppStore((state) => state.litClient)
-
-  const onChat = async (nft: Nft) => {
-    console.log(nft.contractAddress)
-    const tokenId = await townsContract?.holderContractAddress2TokenIds(nft.contractAddress)
-    console.log(tokenId.toString())
-    const chatId = dayjs().unix()
-    if (new BigNumber(tokenId.toString()).gt(0)) {
-      const town = await townsContract?.tokenId2Towns(tokenId.toString())
-      console.log(town)
-      const res = await timClient.joinGroup({
-        groupID: town.chatId,
-      })
-      console.log(res)
-      if (res?.code === 0) {
-        toast.success('Join group successfully')
-        router.push(`/group/GROUP${town.chatId}`)
-      }
-    } else {
-      const key = await generateAesKey()
-      const rawKey = await exportAesKey(key)
-
-      const rawKeyStr = arrayBufferToHex(rawKey)
-      const {encryptedSymmetricKey, encryptedString} = await nftHolderEncryptWithLit(
-        litClient,
-        nft.contractAddress,
-        rawKeyStr
-      )
-
-      const encryptedKeyStr = await blobToHex(encryptedString)
-
-      try {
-        const name = `${nft.collectionName} Holders`
-        const description = `${nft.collectionName} holders group`
-
-        const condition = JSON.stringify({
-          encryptedKey: encryptedKeyStr,
-          encryptedSymmetricKey: encryptedSymmetricKey,
-        })
-        const tx = await townsContract?.mintHolderTown(
-          address,
-          nft.contractAddress,
-          chatId.toString(),
-          name,
-          description,
-          condition
-        )
-        const res = await timClient.createGroup({
-          name: `${nft.collectionName} Holders`,
-          type: TIM.TYPES.GRP_MEETING,
-          groupID: chatId.toString(),
-          memberList: [
-            {
-              userID: address,
-            },
-          ],
-        })
-        console.log(res)
-      } catch (e) {
-        console.error('create group: ', e)
-      }
-    }
-  }
 
   const onSet = async () => {
     let middleware = 'free'
@@ -404,13 +343,12 @@ const Subscribe = () => {
                         <div className='div p-6'>
                           <div className='text-xs text-gray-400'>{nft.collectionName}</div>
                           <div className='text-base font-medium truncate'>{nft.name}</div>
-                          <div
-                            className={'flex mt-6 items-center gap-1 text-sm cursor-pointer text-primary'}
-                            onClick={() => onChat(nft)}
-                          >
-                            <PlusCircleIcon className={'h-5 w-5 ml-auto'} />
-                            Chat
-                          </div>
+                          <ChatWithNftHolders nft={nft}>
+                            <div className={'flex mt-6 items-center gap-1 text-sm cursor-pointer text-primary'}>
+                              <PlusCircleIcon className={'h-5 w-5 ml-auto'} />
+                              Chat
+                            </div>
+                          </ChatWithNftHolders>
                         </div>
                       </div>
                     ))}

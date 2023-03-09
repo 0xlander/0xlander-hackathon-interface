@@ -12,6 +12,9 @@ import {NotifiSubscriptionCard} from '@notifi-network/notifi-react-card'
 import React from 'react'
 import {inputLabels, inputSeparators} from '../config/notifi'
 import {Avatar} from './avatar'
+import {useAppStore} from '../store/app'
+import {ellipseAddress} from '../helpers/display'
+import {JoinButton} from './join-button'
 
 export const Sidebar = () => {
   const router = useRouter()
@@ -51,11 +54,17 @@ export const Sidebar = () => {
     return pathname.includes(link)
   }
 
+  const inbox = useAppStore((state) => state.inbox)
+  const hasNewInboxMessage = useAppStore((state) => state.hasNewInboxMessage)
+
   return (
     <div className={'sidebar flex flex-col items-center'}>
-      <div className={'text-center'} onClick={() => router.push(`/user/${address}`)}>
-        <Avatar size={10} address={address} />
+      <div className={'text-center cursor-pointer'} onClick={() => router.push(`/user/${address}`)}>
+        <Avatar size={44} address={address} />
         <div className={'text-xs text-gray-600 mt-1'}>{profile?.address?.wallet?.primaryProfile?.handle}</div>
+        <div className={'text-center text-gray-400 text-[10px]'}>
+          {profile?.address?.wallet?.primaryProfile?.profileID}
+        </div>
       </div>
       <div className={'my-6'} />
       <div className={'flex gap-8 flex-col'}>
@@ -74,16 +83,38 @@ export const Sidebar = () => {
               <BellAlertIcon className={'h-6 w-6'} />
             </Popover.Button>
             <Popover.Panel className={'absolute -translate-y-1/2 left-14 mb-full origin-center-right'}>
-              <div className={'w-[360px] shadow-gray-300 border border-gray-200 shadow-2xl rounded-xl'}>
-                <NotifiSubscriptionCard
-                  classNames={{
-                    container: 'rounded-2xl',
-                  }}
-                  cardId='a8f12de72d9c4d3896ef2bb0b4261468'
-                  inputLabels={inputLabels}
-                  inputSeparators={inputSeparators}
-                  darkMode={false}
-                />
+              <div
+                className={'w-[320px] h-[400px] bg-white shadow-gray-300 border border-gray-200 shadow-2xl rounded-xl'}
+              >
+                {/*<NotifiSubscriptionCard*/}
+                {/*  classNames={{*/}
+                {/*    container: 'rounded-2xl',*/}
+                {/*  }}*/}
+                {/*  cardId='a8f12de72d9c4d3896ef2bb0b4261468'*/}
+                {/*  inputLabels={inputLabels}*/}
+                {/*  inputSeparators={inputSeparators}*/}
+                {/*  darkMode={false}*/}
+                {/*/>*/}
+                <div className={'p-6'}>
+                  {inbox &&
+                    Array.from(inbox.values()).map((message, index: number) => {
+                      const js = JSON.parse(message.content)
+                      return (
+                        <div key={message?.id}>
+                          <div className={'flex gap-4 mb-4'}>
+                            <Avatar address={message.senderAddress} size={30} />
+                            <div>
+                              <div className={'text-md font-bold'}>{ellipseAddress(message?.senderAddress)}</div>
+                              {js.type === 'invitation' && (
+                                <div className={'text-gray-500'}>Invite you to join {js.groupName}</div>
+                              )}
+                              <JoinButton chatId={js.chatId} />
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                </div>
               </div>
             </Popover.Panel>
           </Popover>

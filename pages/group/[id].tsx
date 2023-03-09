@@ -10,19 +10,124 @@ import {MessageTile} from '../../components/message'
 import dayjs from 'dayjs'
 import {ConversationBeginningNotice, LoadingMore} from '../../components/conversation'
 import {useWindowSize} from '../../hooks/useWindowSize'
-import {ChatBubbleBottomCenterIcon} from '@heroicons/react/24/outline'
+import {ChatBubbleBottomCenterIcon, HeartIcon, UserPlusIcon} from '@heroicons/react/24/outline'
+import {HeartIcon as ActiveHeartIcon} from '@heroicons/react/24/solid'
 import {ellipseAddress} from '../../helpers/display'
 import {DEFAULT_AVATAR} from '../../config/image'
 import {handleUri} from '../../helpers/image'
-import {nftHolderDecryptWithLit} from '../../helpers/lit'
-import {arrayBufferToHex, hexToArrayBuffer, hexToBlob} from '../../helpers'
+import {encryptWithLit, nftHolderDecryptWithLit} from '../../helpers/lit'
+import {arrayBufferToHex, hexToArrayBuffer, hexToBlob, isJsonString, pinFileToIPFS} from '../../helpers'
 import {useTownsContract} from '../../hooks/contract'
 import {aesEncrypt, importAesKey} from '../../helpers/crypto'
 import {toast} from 'react-hot-toast'
 import {Spinner} from '../../components/style'
 import {useQuery} from '@apollo/client'
 import {GET_SUBSCRIBERS} from '../../graphql/GetSubscribers'
-import {useAccount} from 'wagmi'
+import {useAccount, useSigner} from 'wagmi'
+import {useInterval} from '../../hooks/profile'
+import {Avatar} from '../../components/avatar'
+import CyberConnect, {Env} from '@cyberlab/cyberconnect-v2'
+import {usePosts} from '../../hooks/useSubscribe'
+import {GET_POST_META} from '../../graphql/GetPostMeta'
+
+const Post = ({post}: {post: any}) => {
+  const {data: signer} = useSigner()
+  const {address} = useAccount()
+  const profile = useAppStore((state) => state.primaryProfile)
+  const {data, startPolling, stopPolling} = useQuery(GET_POST_META, {
+    variables: {
+      id: post?.node?.contentID,
+      me: address,
+    },
+    pollInterval: 100,
+    fetchPolicy: 'no-cache',
+    notifyOnNetworkStatusChange: true,
+    onCompleted: () => console.log('If this worked no useEffect needed. 😕'),
+  })
+
+  useEffect(() => {
+    startPolling(20000)
+    return () => stopPolling()
+  }, [])
+
+  const [liked, setLiked] = useState(false)
+  const [likeCount, setLikeCount] = useState(0)
+  const body = post?.node?.body
+  const bodyJ = JSON.parse(body)
+
+  const [doing, setDoing] = useState(false)
+  const onLike = async () => {
+    setDoing(true)
+    const cyberConnect = new CyberConnect({
+      namespace: '0xLander',
+      env: Env.STAGING,
+      provider: signer?.provider,
+      signingMessageEntity: 'CyberConnect',
+    })
+    const res = await cyberConnect.like(post?.node?.contentID)
+    console.log(res)
+    setDoing(false)
+  }
+
+  const onUnlike = async () => {
+    setDoing(true)
+    const cyberConnect = new CyberConnect({
+      namespace: '0xLander',
+      env: Env.STAGING,
+      provider: signer?.provider,
+      signingMessageEntity: 'CyberConnect',
+    })
+    const res = await cyberConnect.dislike(post?.node?.contentID)
+    console.log(res)
+    setDoing(false)
+  }
+
+  const [comment, setComment] = useState('')
+
+  const onComment = async () => {
+    const cyberConnect = new CyberConnect({
+      namespace: '0xLander',
+      env: Env.STAGING,
+      provider: signer?.provider,
+      signingMessageEntity: 'CyberConnect',
+    })
+    const res = await cyberConnect.createComment(post?.node?.contentID, {
+      title: 'Comment',
+      body: comment,
+      author: profile?.address?.wallet?.primaryProfile.handle,
+    })
+    console.log(res)
+  }
+
+  return (
+    <>
+      <div className={'text-2xl mb-2'}>{post?.node?.title}</div>
+      <div className={'text-sm text-gray-600 mb-2'}>{bodyJ.content}</div>
+      <div className={'flex gap-2 mb-8 cursor-pointer justify-between'}>
+        {data?.content.likedStatus.liked ? (
+          <div onClick={onUnlike} className={'inline-flex ml-auto items-center gap-2'}>
+            <ActiveHeartIcon className={'h-6 w-6 ml-auto text-red-500'} /> {data?.content.likeCount}
+            {doing && <Spinner />}
+          </div>
+        ) : (
+          <div onClick={onLike} className={'inline-flex ml-auto items-center gap-2'}>
+            <HeartIcon className={'h-6 w-6 ml-auto'} /> {data?.content.likeCount}
+            {doing && <Spinner />}
+          </div>
+        )}
+      </div>
+      <div className={'flex'}>
+        <input className={'input'} value={comment} onChange={(e) => setComment(e.target.value)} type='text' />
+        <button onClick={onComment}>Comment</button>
+      </div>
+      <div>
+        {data?.content?.comments?.edges.map((comment: any) => (
+          <div key={comment?.digest}>{comment?.node.body}</div>
+        ))}
+      </div>
+    </>
+  )
+}
 
 const Group = () => {
   const {address} = useAccount()
@@ -50,7 +155,12 @@ const Group = () => {
   const [doing, setDoing] = useState(false)
   const [fanGroup, setFanGroup] = useState(false)
 
+  const data = useAppStore((state) => state.primaryProfile)
+  const primaryProfile: any = data?.address?.wallet?.primaryProfile
+
   const xmtpClient = useAppStore((state) => state.xmtpClient)
+
+  const {data: signer} = useSigner()
 
   const {data: subscribersRes, loading} = useQuery(GET_SUBSCRIBERS, {
     variables: {
@@ -59,13 +169,15 @@ const Group = () => {
   })
 
   const sub = subscribersRes?.address?.wallet?.primaryProfile
+  const [owner, setOwner] = useState('')
 
   useEffect(() => {
-    return
     const handle = async () => {
       setDoing(true)
       const tokenId = await townsContract?.chatId2TokenIds(chatId)
       const town = await townsContract?.tokenId2Towns(tokenId)
+      const or = await townsContract?.ownerOf(tokenId)
+      setOwner(or)
       setTown(town)
       if (town.name.includes('fans')) {
         setFanGroup(true)
@@ -77,14 +189,20 @@ const Group = () => {
       const encryptedSymmetricKey = condition?.encryptedSymmetricKey
       const handleEncryptedKey = await hexToBlob(encryptedKey, 'application/octet-stream')
       if (!handleEncryptedKey) return
-      const key = await nftHolderDecryptWithLit(
-        litClient,
-        encryptedSymmetricKey,
-        handleEncryptedKey,
-        town.contractAddress
-      )
-      const k = await importAesKey(hexToArrayBuffer(key))
-      setSymKey(k)
+      if (!!localStorage.getItem(chatId)) {
+        const k = await importAesKey(hexToArrayBuffer(localStorage.getItem(chatId) ?? ''))
+        setSymKey(k)
+      } else {
+        const key = await nftHolderDecryptWithLit(
+          litClient,
+          encryptedSymmetricKey,
+          handleEncryptedKey,
+          town.contractAddress
+        )
+        localStorage.setItem(chatId, key)
+        const k = await importAesKey(hexToArrayBuffer(key))
+        setSymKey(k)
+      }
       setCanJoin(true)
       setDoing(false)
     }
@@ -96,7 +214,7 @@ const Group = () => {
         setDoing(false)
       }
     }
-  }, [timIsReady, litClient, townsContract])
+  }, [timIsReady, litClient, townsContract, chatId])
 
   const onSend = async (msg: string) => {
     const iv = crypto.getRandomValues(new Uint8Array(16))
@@ -156,42 +274,46 @@ const Group = () => {
       .catch((e: any) => console.error(e))
   }
 
-  useEffect(() => {
-    if (!timIsReady) return
-    if (chatId) {
-      let promise = timClient.getGroupMemberList({groupID: chatId, count: 100, offset: 0})
-      promise
-        .then(function (resp: any) {
-          setMembers(resp.data.memberList)
-          // addMembers(id, resp.data.memberList)
-        })
-        .catch(function (e: Error) {
-          console.warn('getGroupMemberList error:', e)
-        })
-      timClient
-        ?.getMessageList({
-          conversationID: id,
-          nextReqMessageID: nextID,
-        })
-        .then((resp: any) => {
-          setIsMember(true)
-          if (resp) {
-            const messageList = resp.data.messageList
-            const nextReqMessageID = resp.data.nextReqMessageID
-            const isCompleted = resp.data.isCompleted
-            setNextID(nextReqMessageID)
-            setHasMore(!isCompleted)
-            addTimMessages(id, messageList)
-          }
-        })
-        .catch((e: any) => {
-          if (e.toString().includes('only group')) {
-            setIsMember(false)
-          }
-          console.error(e)
-        })
-    }
-  }, [chatId, timIsReady, isMember])
+  useInterval(
+    () => {
+      if (!timIsReady) return
+      if (chatId) {
+        let promise = timClient.getGroupMemberList({groupID: chatId, count: 100, offset: 0})
+        promise
+          .then(function (resp: any) {
+            setMembers(resp.data.memberList)
+            // addMembers(id, resp.data.memberList)
+          })
+          .catch(function (e: Error) {
+            console.warn('getGroupMemberList error:', e)
+          })
+        timClient
+          ?.getMessageList({
+            conversationID: id,
+            nextReqMessageID: nextID,
+          })
+          .then((resp: any) => {
+            setIsMember(true)
+            if (resp) {
+              const messageList = resp.data.messageList
+              const nextReqMessageID = resp.data.nextReqMessageID
+              const isCompleted = resp.data.isCompleted
+              setNextID(nextReqMessageID)
+              setHasMore(!isCompleted)
+              addTimMessages(id, messageList)
+            }
+          })
+          .catch((e: any) => {
+            if (e.toString().includes('only group')) {
+              setIsMember(false)
+            }
+            console.error(e)
+          })
+      }
+    },
+    3000,
+    true
+  )
 
   const [joinDoing, setJoinDoing] = useState(false)
   const onJoin = async () => {
@@ -199,7 +321,6 @@ const Group = () => {
     const res = await timClient.joinGroup({
       groupID: town.chatId,
     })
-    console.log(res)
     if (res?.code === 0) {
       setIsMember(true)
       toast.success('Join group successfully')
@@ -208,8 +329,9 @@ const Group = () => {
     setJoinDoing(false)
   }
 
+  const [inviteDoing, setInviteDoing] = useState(false)
   const onInvite = async () => {
-    console.log(sub)
+    setInviteDoing(true)
     const addresses = sub?.subscribers.edges.map((s: any) => s.node.wallet.address)
     for (let i = 0; i < addresses.length; i++) {
       const ok = await xmtpClient?.canMessage(addresses[i])
@@ -223,7 +345,54 @@ const Group = () => {
         })
       )
     }
+    setInviteDoing(false)
   }
+
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
+
+  const onPost = async () => {
+    if (!address) return
+
+    try {
+      const cyberConnect = new CyberConnect({
+        namespace: '0xLander',
+        env: Env.STAGING,
+        provider: signer?.provider,
+        signingMessageEntity: 'CyberConnect',
+      })
+      const res = await cyberConnect.createPost({
+        title: title,
+        body: JSON.stringify({
+          type: 'encrypt',
+          content: body,
+          groupId: chatId,
+        }),
+        author: data?.address?.wallet?.primaryProfile?.handle,
+      })
+      console.log(res)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const {posts, postCount} = usePosts(owner)
+
+  const filterPosts =
+    posts &&
+    posts?.filter((post: any) => {
+      const body = post?.node?.body
+      if (isJsonString(body)) {
+        const j = JSON.parse(body)
+        if (j?.groupId) {
+          return true
+        }
+      }
+
+      return false
+    })
+
+  const [type, setType] = useState(0)
 
   return (
     <Layout>
@@ -232,6 +401,17 @@ const Group = () => {
         <div className={'w-full pt-12 relative'}>
           <div className='absolute w-full h-[60px] bg-white border-b border-b-gray-200 px-8 flex items-center top-0'>
             {town?.name}
+            {fanGroup && owner === address && (
+              <button
+                className={'text-primary ml-auto flex items-center gap-2'}
+                onClick={onInvite}
+                disabled={inviteDoing}
+              >
+                <UserPlusIcon className={'h-5 w-5'} />
+                Invite all fans
+                {inviteDoing && <Spinner />}
+              </button>
+            )}
           </div>
           <InfiniteScroll
             dataLength={messages?.length ?? 0}
@@ -282,35 +462,55 @@ const Group = () => {
           <MessageComposer onSend={onSend} />
         </div>
 
-        <div className={'w-[480px] hidden md:block p-6 bg-white border-l border-l-gray-200'}>
-          <div className='text-lg mb-4'>Members</div>
-          <div className='flex flex-col gap-4'>
-            {members?.map((member: any) => {
-              return (
-                <div key={member?.userID} className={'flex items-center gap-3'}>
-                  <img
-                    src={member?.avatar ? handleUri(member?.avatar) : DEFAULT_AVATAR}
-                    alt='avatar'
-                    width={32}
-                    height={32}
-                    className={'rounded-lg'}
-                  />
-                  <div className={'text-sm'}>
-                    {member?.nick ? member?.nick : ellipseAddress(member.userID)}
-                    {member?.role === 'Owner' && <div className={'text-primary text-[11px]'}>Owner</div>}
-                  </div>
-                  <ChatBubbleBottomCenterIcon
-                    className={'h-4 w-4 ml-auto cursor-pointer'}
-                    onClick={() => router.push(`/dm/${member.userID}`)}
-                  />
-                </div>
-              )
-            })}
+        <div className={'w-[400px] min-w-[400px] hidden md:block p-6 bg-white border-l border-l-gray-200'}>
+          <div className='flex text-gray-400 gap-4 mb-8 cursor-pointer'>
+            <div onClick={() => setType(0)} className={`${type === 0 ? 'text-gray-800' : ''}`}>
+              Overview
+            </div>
+            <div onClick={() => setType(1)} className={`${type === 1 ? 'text-gray-800' : ''}`}>
+              Forum
+            </div>
           </div>
-          {fanGroup && (
-            <button className={'btn-primary w-full mt-10'} onClick={onInvite}>
-              Invite all fans
-            </button>
+          {type === 1 && (
+            <div style={{height: 'calc(100vh-100px)'}} className={'overflow-y-scroll h-[calc(100vh-100px)]'}>
+              {filterPosts &&
+                filterPosts?.map((post: any) => {
+                  return <Post post={post} key={post?.node?.id} />
+                })}
+            </div>
+          )}
+          {type === 0 && (
+            <>
+              <div className='text-lg mb-4 flex justify-between items-center'>Members</div>
+              <div className='flex flex-col gap-4'>
+                {members?.map((member: any) => {
+                  return (
+                    <div key={member?.userID} className={'flex items-center gap-3'}>
+                      <Avatar address={member.userId} size={40} />
+                      <div className={'text-sm'}>
+                        {ellipseAddress(member.userID)}
+                        {member?.role === 'Owner' && <div className={'text-primary text-[11px]'}>Owner</div>}
+                      </div>
+                      <ChatBubbleBottomCenterIcon
+                        className={'h-4 w-4 ml-auto cursor-pointer'}
+                        onClick={() => router.push(`/dm/${member.userID}`)}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+              <div>
+                <div className='form-group'>
+                  <input type='text' className={'input'} value={title} onChange={(e) => setTitle(e.target.value)} />
+                </div>
+                <div className='form-group'>
+                  <textarea className={'input'} value={body} onChange={(e) => setBody(e.target.value)} />
+                </div>
+                <button className={'btn btn-primary'} onClick={onPost}>
+                  Post
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>

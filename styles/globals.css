@@ -8,6 +8,16 @@ body {
   margin: 0;
   font-family: 'Montserrat', sans-serif;
 }
+html {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar{
+  display: none;
+  width: 0 !important;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+}
 
 a {
   color: inherit;

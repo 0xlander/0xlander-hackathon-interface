@@ -33,7 +33,7 @@ export const FollowersModal = ({open, onClose, handle}: {open: boolean; onClose:
                   key={follower?.node?.address?.wallet?.primaryProfile?.handle}
                   className={'flex items-center gap-4'}
                 >
-                  <Avatar address={follower?.node?.address?.address} size={9} />
+                  <Avatar address={follower?.node?.address?.address} size={40} />
                   <div>
                     <div className={'text-lg font-medium'}>
                       {follower?.node?.address?.wallet?.primaryProfile?.handle}

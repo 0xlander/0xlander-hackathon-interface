@@ -30,6 +30,10 @@ interface AppState {
   setPreviewMessage: (key: string, message: DecodedMessage) => void
   setPreviewMessages: (previewMessages: Map<string, DecodedMessage>) => void
   addMessages: (key: string, newMessages: DecodedMessage[]) => number
+  inbox: Map<string, any>
+  addInbox: (key: string, value: any) => void
+  hasNewInboxMessage: boolean
+  setHasNewInboxMessage: (ok: boolean) => void
   reset: () => void
 }
 
@@ -92,6 +96,20 @@ export const useAppStore = create<AppState>((set) => ({
       return {convoMessages}
     })
     return numAdded
+  },
+  inbox: new Map<string, any>(),
+  addInbox: (key: string, value: any) => {
+    set((state) => {
+      const newInbox = new Map(state.inbox)
+      newInbox.set(key, value)
+      return {inbox: newInbox}
+    })
+  },
+  hasNewInboxMessage: false,
+  setHasNewInboxMessage: (ok: boolean) => {
+    set((state) => {
+      return {hasNewInboxMessage: ok}
+    })
   },
   reset: () =>
     set(() => {

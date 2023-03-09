@@ -7,7 +7,7 @@ import {
 } from '@heroicons/react/24/outline'
 import {InboxIcon} from '@heroicons/react/24/solid'
 import {ConversationsList} from './conversation-list'
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import {FollowersModal} from './modals/followers'
 import {useAppStore} from '../store/app'
 import {CreateGroupModal} from './modals/create-group'
@@ -122,6 +122,32 @@ export const ChatBox = () => {
     setDoing(false)
   }
 
+  const [filterConversations, setFilterConversations] = useState<any[]>()
+
+  useEffect(() => {
+    const query = async () => {
+      if (timConversations) {
+        const convos = Array.from(timConversations.values())
+        const results: any[] = []
+        for (let i = 0; i < convos.length; i++) {
+          if (convos[i].groupProfile) {
+            const groupID = convos[i].groupProfile.groupID
+            const tokenId = await townsContract?.chatId2TokenIds(groupID)
+            if (new BigNumber(tokenId.toString()).gt(0)) {
+              results.push(convos[i])
+            }
+          }
+        }
+        setFilterConversations(results)
+      }
+    }
+    try {
+      query()
+    } catch (e) {
+      console.error(e)
+    }
+  }, [timConversations])
+
   return (
     <div className={'w-[340px] min-w-[340px] border-r border-r-gray-200 ml-[88px] h-screen pt-8'}>
       <CreateGroupModal
@@ -137,47 +163,34 @@ export const ChatBox = () => {
             <PlusCircleIcon className={'h-6 w-6 cursor-pointer'} />
           </Popover.Button>
           <Popover.Panel className={'absolute right-0 mb-full origin-center-left'}>
-            <div className={'rounded-md shadow shadow-gray-100 w-[220px] border border-gray-200 bg-white py-2'}>
+            <div className={'rounded-md shadow shadow-gray-100 w-[242px] border border-gray-200 bg-white py-2'}>
               <div
                 onClick={() => setOpenFollowers(true)}
-                className={'text-gray-500 text-sm px-6 py-2 flex items-center gap-2 cursor-pointer hover:bg-gray-50'}
+                className={'text-gray-500 text-sm px-6 py-3 flex items-center gap-2 cursor-pointer hover:bg-gray-50'}
               >
                 <ChatBubbleBottomCenterIcon className={'w-4 h-4'} />
                 Chat with
               </div>
               <div
                 onClick={() => setOpenCreateGroup(true)}
-                className={'text-gray-500 text-sm px-6 py-2 flex items-center gap-2 cursor-pointer hover:bg-gray-50'}
+                className={'text-gray-500 text-sm px-6 py-3 flex items-center gap-2 cursor-pointer hover:bg-gray-50'}
               >
                 <ChatBubbleLeftIcon className={'w-4 h-4 text-primary'} />
                 Create Group
               </div>
               <div
                 onClick={onCreateSubscribeGroup}
-                className={'text-gray-500 text-sm px-6 py-2 flex items-center gap-2 cursor-pointer hover:bg-gray-50'}
+                className={'text-gray-500 text-sm px-6 py-3 flex items-center gap-2 cursor-pointer hover:bg-gray-50'}
               >
                 <ChatBubbleBottomCenterTextIcon className={'w-4 h-4 text-rose-500'} />
-                Subscribe Group ({sub?.subscriberCount}){doing && <Spinner />}
+                Subscribers Group ({sub?.subscriberCount}){doing && <Spinner />}
               </div>
             </div>
           </Popover.Panel>
         </Popover>
       </div>
-      {/*<div className={'p- flex items-start gap-4 cursor-pointer mb-4 px-6'}>*/}
-      {/*  <div*/}
-      {/*    className={*/}
-      {/*      'w-[50px] h-[50px] bg-blue-500 rounded-lg flex items-center justify-center flex-grow flex-shrink-0 basis-[50px]'*/}
-      {/*    }*/}
-      {/*  >*/}
-      {/*    <InboxIcon className={'h-6 w-6 text-white'} />*/}
-      {/*  </div>*/}
-      {/*  <div>*/}
-      {/*    <div className='text-base font-medium'>Subscribes</div>*/}
-      {/*    <div className={'text-sm text-gray-400 truncate'}>You haven`t created any badges yet.</div>*/}
-      {/*  </div>*/}
-      {/*</div>*/}
-      {timConversations &&
-        Array.from(timConversations.values())?.map((convo: any) => {
+      {filterConversations &&
+        filterConversations.map((convo: any) => {
           if (convo?.conversationID === '@TIM#SYSTEM') {
             return
           }

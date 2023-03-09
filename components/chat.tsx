@@ -86,7 +86,7 @@ export const ConversationCard = ({
             <UserGroupIcon className={'h-6 w-6 text-white'} />
           </div>
         ) : (
-          <Avatar address={name} size={10} className={isDM ? 'rounded-full' : ''} />
+          <Avatar address={name} size={40} className={isDM ? 'rounded-full' : ''} />
         )}
         <div className='py-4 sm:text-left text w-full'>
           <div className='flex justify-between items-center'>

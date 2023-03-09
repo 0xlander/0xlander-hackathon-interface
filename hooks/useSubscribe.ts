@@ -18,3 +18,19 @@ export const useSubscribe = (address: string | undefined) => {
     loading,
   }
 }
+
+export const usePosts = (address: string | undefined) => {
+  const {data: postsRes, loading} = useQuery(PRIMARY_PROFILE_POSTS, {
+    variables: {
+      address: address,
+    },
+  })
+
+  const profile = postsRes?.address?.wallet?.primaryProfile
+
+  return {
+    posts: profile?.posts?.edges,
+    postCount: profile?.postCount,
+    loading,
+  }
+}

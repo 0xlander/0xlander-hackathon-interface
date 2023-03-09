@@ -9,18 +9,29 @@ import {useLazyQuery, useMutation, useQuery} from '@apollo/client'
 import {CREATE_SUBSCRIBE_TYPED_DATA} from '../../graphql/CreateSubscribeTypedData'
 import {RELAY} from '../../graphql/Relay'
 import {RELAY_ACTION_STATUS} from '../../graphql/RelayActionStatus'
-import {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import {useInterval, useProfile} from '../../hooks/profile'
 import {CREATE_SET_SUBSCRIBE_DATA_TYPED_DATA} from '../../graphql/CreateSetSubscribeTypedData'
 import {SubscribesModal} from '../../components/modals/subscribes'
 import {useAppStore} from '../../store/app'
-import {PencilIcon, PencilSquareIcon} from '@heroicons/react/24/outline'
+import {PencilIcon, PencilSquareIcon, PlusCircleIcon} from '@heroicons/react/24/outline'
 import {FollowButton} from '@cyberconnect/react-follow-button'
 import CyberConnect, {Blockchain, Env} from '@cyberlab/cyberconnect-v2'
 import {GET_PROFILE_BY_ADDRESS} from '../../graphql/GetProfileByAddress'
 import {FollowersModal} from '../../components/modals/followers'
 import {PRIMARY_PROFILE_POSTS} from '../../graphql/PrimaryProfilePosts'
 import {PRIMARY_PROFILE_ESSENCES} from '../../graphql/PrimaryProfileEssences'
+import {handleUri} from '../../helpers/image'
+import {Nft} from '../../types/nft'
+import {EvmChain} from '@moralisweb3/evm-utils'
+import Moralis from 'moralis'
+import BigNumber from 'bignumber.js'
+import {toast} from 'react-hot-toast'
+import {exportAesKey, generateAesKey} from '../../helpers/crypto'
+import {arrayBufferToHex, blobToHex} from '../../helpers'
+import {nftHolderEncryptWithLit} from '../../helpers/lit'
+import TIM from 'tim-js-sdk'
+import {useTownsContract} from '../../hooks/contract'
 
 const Subscribe = () => {
   const router = useRouter()
@@ -46,6 +57,7 @@ const Subscribe = () => {
     },
   })
   const essences = essencesRes?.address?.wallet?.primaryProfile.essences?.edges
+  console.log(essences)
 
   const {data: profile} = useQuery(GET_PROFILE_BY_ADDRESS, {
     variables: {
@@ -54,6 +66,38 @@ const Subscribe = () => {
     },
   })
 
+  const [nfts, setNfts] = useState<Nft[]>()
+  useEffect(() => {
+    const query = async (addr: string) => {
+      try {
+        const chain = EvmChain.BSC_TESTNET
+
+        const response = await Moralis.EvmApi.nft.getWalletNFTs({
+          address: addr,
+          chain,
+        })
+
+        const filter: Nft[] = response?.result?.map((r) => {
+          const metadata: any = r.metadata
+          return {
+            name: metadata?.name ?? '',
+            collectionName: r.name ?? '',
+            tokenId: r.tokenId.toString(),
+            image: metadata?.image ?? '',
+            contractAddress: r.tokenAddress.checksum,
+          }
+        })
+        console.log('fi ', filter)
+        setNfts(filter)
+      } catch (e) {
+        console.error(e)
+      }
+    }
+
+    if (address) {
+      query(address)
+    }
+  }, [address])
   const onSubscribe = async () => {
     /* Create typed data in a readable format */
     const typedDataResult = await createSubscribeTypedData({
@@ -109,6 +153,71 @@ const Subscribe = () => {
   )
 
   const [createSetSubscribeDataTypedData] = useMutation(CREATE_SET_SUBSCRIBE_DATA_TYPED_DATA)
+  const townsContract = useTownsContract()
+  const timClient = useAppStore((state) => state.timClient)
+  const litClient = useAppStore((state) => state.litClient)
+
+  const onChat = async (nft: Nft) => {
+    console.log(nft.contractAddress)
+    const tokenId = await townsContract?.holderContractAddress2TokenIds(nft.contractAddress)
+    console.log(tokenId.toString())
+    const chatId = dayjs().unix()
+    if (new BigNumber(tokenId.toString()).gt(0)) {
+      const town = await townsContract?.tokenId2Towns(tokenId.toString())
+      console.log(town)
+      const res = await timClient.joinGroup({
+        groupID: town.chatId,
+      })
+      console.log(res)
+      if (res?.code === 0) {
+        toast.success('Join group successfully')
+        router.push(`/group/GROUP${town.chatId}`)
+      }
+    } else {
+      const key = await generateAesKey()
+      const rawKey = await exportAesKey(key)
+
+      const rawKeyStr = arrayBufferToHex(rawKey)
+      const {encryptedSymmetricKey, encryptedString} = await nftHolderEncryptWithLit(
+        litClient,
+        nft.contractAddress,
+        rawKeyStr
+      )
+
+      const encryptedKeyStr = await blobToHex(encryptedString)
+
+      try {
+        const name = `${nft.collectionName} Holders`
+        const description = `${nft.collectionName} holders group`
+
+        const condition = JSON.stringify({
+          encryptedKey: encryptedKeyStr,
+          encryptedSymmetricKey: encryptedSymmetricKey,
+        })
+        const tx = await townsContract?.mintHolderTown(
+          address,
+          nft.contractAddress,
+          chatId.toString(),
+          name,
+          description,
+          condition
+        )
+        const res = await timClient.createGroup({
+          name: `${nft.collectionName} Holders`,
+          type: TIM.TYPES.GRP_MEETING,
+          groupID: chatId.toString(),
+          memberList: [
+            {
+              userID: address,
+            },
+          ],
+        })
+        console.log(res)
+      } catch (e) {
+        console.error('create group: ', e)
+      }
+    }
+  }
 
   const onSet = async () => {
     let middleware = 'free'
@@ -232,8 +341,8 @@ const Subscribe = () => {
                       <div className={'text-xl'}>{profile?.address?.wallet?.primaryProfile?.followerCount}</div>
                       <div className={'text-gray-500'}>Followers</div>
                     </div>
-                    <div className='cursor-pointer col-span-1' onClick={() => setOpenFollowersModal(true)}>
-                      <div className={'text-xl'}>{profile?.address?.wallet?.primaryProfile?.followerCount}</div>
+                    <div className='cursor-pointer col-span-1' onClick={() => setOpenSubModal(true)}>
+                      <div className={'text-xl'}>{subscriberCount}</div>
                       <div className={'text-gray-500'}>Subscribers</div>
                     </div>
                     {/*<div className=''>*/}
@@ -283,6 +392,29 @@ const Subscribe = () => {
               </div>
 
               <div className='col-span-2'>
+                <div className='text-2xl font-medium my-8'>NFTs</div>
+                <div className='grid grid-cols-4 gap-8'>
+                  {nfts &&
+                    nfts?.map((nft) => (
+                      <div
+                        key={`${nft.contractAddress}-${nft.tokenId}`}
+                        className={'col-span-1 border border-gray-200 rounded-2xl'}
+                      >
+                        <img src={handleUri(nft.image)} alt='nft' className={'aspect-square rounded-xl'} />
+                        <div className='div p-6'>
+                          <div className='text-xs text-gray-400'>{nft.collectionName}</div>
+                          <div className='text-base font-medium truncate'>{nft.name}</div>
+                          <div
+                            className={'flex mt-6 items-center gap-1 text-sm cursor-pointer text-primary'}
+                            onClick={() => onChat(nft)}
+                          >
+                            <PlusCircleIcon className={'h-5 w-5 ml-auto'} />
+                            Chat
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
                 <div className={''}>
                   <div>
                     <div className='flex text-2xl font-medium mb-8 items-center'>

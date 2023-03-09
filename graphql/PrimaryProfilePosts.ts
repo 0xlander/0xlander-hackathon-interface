@@ -25,6 +25,7 @@ export const PRIMARY_PROFILE_POSTS = gql`
             edges {
               node {
                 ... on Post {
+                  contentID
                   title
                   body
                   digest

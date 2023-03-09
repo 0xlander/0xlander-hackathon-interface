@@ -1,6 +1,6 @@
 import React, {useContext, useEffect, useState} from 'react'
 import {useRouter} from 'next/router'
-import {ArrowSmallUpIcon, FaceSmileIcon, PhotoIcon, PlusCircleIcon} from '@heroicons/react/24/outline'
+import {ArrowSmallUpIcon, FaceSmileIcon, PhotoIcon, PlusCircleIcon, VideoCameraIcon} from '@heroicons/react/24/outline'
 import EmojiPicker, {EmojiClickData} from 'emoji-picker-react'
 import {MerkleTree} from 'merkletreejs'
 import {utils} from 'ethers'
@@ -11,13 +11,14 @@ type MessageComposerProps = {
   onSend: (msg: string) => Promise<void>
   groupId?: string
   onUploadMedia?: (media: File) => void
+  onVideoClick?: any
 }
 
 export function classNames(...classes: (string | null)[]) {
   return classes.filter(Boolean).join(' ')
 }
 
-const MessageSender = ({onSend}: MessageComposerProps): JSX.Element => {
+const MessageSender = ({onSend, onVideoClick}: MessageComposerProps): JSX.Element => {
   const [message, setMessage] = useState('')
   const router = useRouter()
 
@@ -98,6 +99,7 @@ const MessageSender = ({onSend}: MessageComposerProps): JSX.Element => {
             />
           </Popover.Panel>
         </Popover>
+        <VideoCameraIcon className={'h-6 w-6 cursor-pointer'} onClick={onVideoClick} />
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 import {Conversation, DecodedMessage, SortDirection, Stream} from '@xmtp/xmtp-js'
 import {useEffect, useState} from 'react'
-import {getConversationKey, shortAddress, truncate} from '../helpers/xmtp'
+import {getConversationKey, isInboxMessage, shortAddress, truncate} from '../helpers/xmtp'
 import {useAppStore} from '../store/app'
 import {useAccount} from 'wagmi'
 
@@ -18,6 +18,8 @@ export const useListConversations = () => {
   const setPreviewMessage = useAppStore((state) => state.setPreviewMessage)
   const setLoadingConversations = useAppStore((state) => state.setLoadingConversations)
   const [browserVisible, setBrowserVisible] = useState<boolean>(true)
+  const addInbox = useAppStore((state) => state.addInbox)
+  const setHasNewInboxMessage = useAppStore((state) => state.setHasNewInboxMessage)
 
   useEffect(() => {
     window.addEventListener('focus', () => setBrowserVisible(true))
@@ -50,6 +52,13 @@ export const useListConversations = () => {
       for await (const message of messageStream) {
         const key = getConversationKey(message.conversation)
         setPreviewMessage(key, message)
+
+        if (isInboxMessage(message.content) && message.senderAddress !== address) {
+          addInbox(message.id, message)
+          setHasNewInboxMessage(true)
+
+          continue
+        }
 
         const numAdded = addMessages(key, [message])
         if (numAdded > 0) {

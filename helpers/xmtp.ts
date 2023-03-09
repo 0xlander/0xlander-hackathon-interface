@@ -82,5 +82,23 @@ export const getMessageForShow = (content: any) => {
     return 'Invitation Message'
   }
 
+  if (js.type === 'livestream') {
+    return 'Livestream'
+  }
+
   return content
+}
+
+export const isInboxMessage = (content: any) => {
+  if (!isJsonString(content)) return false
+  const js = JSON.parse(content)
+  if (js.type === 'invitation') {
+    return true
+  }
+
+  if (js.type === 'livestream') {
+    return true
+  }
+
+  return false
 }

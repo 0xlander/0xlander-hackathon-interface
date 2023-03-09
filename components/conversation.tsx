@@ -17,6 +17,7 @@ import MessageComposer from './message-composer'
 import {MessageTile} from './message'
 import {Player, useCreateStream, useUpdateStream} from '@livepeer/react'
 import {create} from 'zustand'
+import {steps} from '@motionone/easing'
 
 type ConversationProps = {
   recipientWalletAddr: string
@@ -37,7 +38,8 @@ export const Conversation = ({recipientWalletAddr}: ConversationProps): JSX.Elem
 
   const [streamName, setStreamName] = useState('22222222')
 
-  const {mutate: createStream, data: stream, status} = useCreateStream(streamName ? {name: streamName} : null)
+  const {mutateAsync: createStream, data: stream, status} = useCreateStream(streamName ? {name: streamName} : null)
+  console.log(stream)
 
   const {mutate: updateStream, error} = useUpdateStream({
     streamId: stream?.id ?? '',
@@ -59,6 +61,17 @@ export const Conversation = ({recipientWalletAddr}: ConversationProps): JSX.Elem
   }, [conversationKey, hasMore, messages, endTime])
 
   const hasMessages = Number(messages?.length ?? 0) > 0
+
+  const onVideoClick = async () => {
+    const stream = await createStream?.()
+    console.log(stream)
+    sendMessage(
+      JSON.stringify({
+        type: 'livestream',
+        stream: stream,
+      })
+    )
+  }
 
   if (loadingConversations && !hasMessages) {
     return <Loader headingText='Loading messages...' subHeadingText='Please wait a moment' isLoading />
@@ -83,18 +96,9 @@ export const Conversation = ({recipientWalletAddr}: ConversationProps): JSX.Elem
       {/*<Player title={'22222222'} playbackId={'9f81jnefw5f6gkwk'} autoPlay muted />*/}
       {/*{stream?.playbackId}*/}
       {/*{stream?.playbackId && <Player title={stream?.name} playbackId={stream?.playbackId} autoPlay muted />}*/}
+      {/*{stream?.rtmpIngestUrl}*/}
 
-      {/*<div>*/}
-      {/*  <button*/}
-      {/*    className={'btn-primary'}*/}
-      {/*    onClick={() => {*/}
-      {/*      createStream?.()*/}
-      {/*    }}*/}
-      {/*  >*/}
-      {/*    Video*/}
-      {/*  </button>*/}
-      {/*</div>*/}
-      <MessageComposer onSend={sendMessage} />
+      <MessageComposer onSend={sendMessage} onVideoClick={onVideoClick} />
     </div>
   )
 }

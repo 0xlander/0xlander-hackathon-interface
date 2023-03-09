@@ -1,5 +1,6 @@
 import {useQuery} from '@apollo/client'
 import {PRIMARY_PROFILE_POSTS} from '../graphql/PrimaryProfilePosts'
+import {useEffect} from 'react'
 
 export const useSubscribe = (address: string | undefined) => {
   const {data: postsRes, loading} = useQuery(PRIMARY_PROFILE_POSTS, {
@@ -20,11 +21,21 @@ export const useSubscribe = (address: string | undefined) => {
 }
 
 export const usePosts = (address: string | undefined) => {
-  const {data: postsRes, loading} = useQuery(PRIMARY_PROFILE_POSTS, {
+  const {
+    data: postsRes,
+    loading,
+    startPolling,
+    stopPolling,
+  } = useQuery(PRIMARY_PROFILE_POSTS, {
     variables: {
       address: address,
     },
   })
+
+  useEffect(() => {
+    startPolling(3000)
+    return () => stopPolling()
+  }, [])
 
   const profile = postsRes?.address?.wallet?.primaryProfile
 

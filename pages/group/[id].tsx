@@ -13,10 +13,8 @@ import {useWindowSize} from '../../hooks/useWindowSize'
 import {ChatBubbleBottomCenterIcon, HeartIcon, UserPlusIcon} from '@heroicons/react/24/outline'
 import {HeartIcon as ActiveHeartIcon} from '@heroicons/react/24/solid'
 import {ellipseAddress} from '../../helpers/display'
-import {DEFAULT_AVATAR} from '../../config/image'
-import {handleUri} from '../../helpers/image'
-import {encryptWithLit, nftHolderDecryptWithLit} from '../../helpers/lit'
-import {arrayBufferToHex, hexToArrayBuffer, hexToBlob, isJsonString, pinFileToIPFS} from '../../helpers'
+import {nftHolderDecryptWithLit} from '../../helpers/lit'
+import {arrayBufferToHex, hexToArrayBuffer, hexToBlob, isJsonString} from '../../helpers'
 import {useTownsContract} from '../../hooks/contract'
 import {aesEncrypt, importAesKey} from '../../helpers/crypto'
 import {toast} from 'react-hot-toast'
@@ -46,12 +44,10 @@ const Post = ({post}: {post: any}) => {
   })
 
   useEffect(() => {
-    startPolling(20000)
+    startPolling(3000)
     return () => stopPolling()
   }, [])
 
-  const [liked, setLiked] = useState(false)
-  const [likeCount, setLikeCount] = useState(0)
   const body = post?.node?.body
   const bodyJ = JSON.parse(body)
 
@@ -84,24 +80,34 @@ const Post = ({post}: {post: any}) => {
 
   const [comment, setComment] = useState('')
 
+  const [commentDoing, setCommentDoing] = useState(false)
   const onComment = async () => {
+    setCommentDoing(true)
     const cyberConnect = new CyberConnect({
       namespace: '0xLander',
       env: Env.STAGING,
       provider: signer?.provider,
       signingMessageEntity: 'CyberConnect',
     })
-    const res = await cyberConnect.createComment(post?.node?.contentID, {
-      title: 'Comment',
-      body: comment,
-      author: profile?.address?.wallet?.primaryProfile.handle,
-    })
-    console.log(res)
+    try {
+      const res = await cyberConnect.createComment(post?.node?.contentID, {
+        title: 'Comment',
+        body: comment,
+        author: profile?.address?.wallet?.primaryProfile.handle,
+      })
+      console.log(res)
+    } catch (e) {
+      console.error(e)
+    }
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+    setCommentDoing(false)
+    setComment('')
   }
 
   return (
-    <>
+    <div>
       <div className={'text-2xl mb-2'}>{post?.node?.title}</div>
+      <div className={'text-gray-400 text-xs mb-4'}>{post?.node?.createdAt}</div>
       <div className={'text-sm text-gray-600 mb-2'}>{bodyJ.content}</div>
       <div className={'flex gap-2 mb-8 cursor-pointer justify-between'}>
         {data?.content.likedStatus.liked ? (
@@ -116,16 +122,33 @@ const Post = ({post}: {post: any}) => {
           </div>
         )}
       </div>
-      <div className={'flex'}>
-        <input className={'input'} value={comment} onChange={(e) => setComment(e.target.value)} type='text' />
-        <button onClick={onComment}>Comment</button>
-      </div>
+      <div className='text-lg mb-6'>Comments({data?.content?.commentCount ?? 0})</div>
       <div>
         {data?.content?.comments?.edges.map((comment: any) => (
-          <div key={comment?.digest}>{comment?.node.body}</div>
+          <div key={comment?.digest}>
+            <div className='flex gap-4 mb-4'>
+              <Avatar address={comment?.node?.authorAddress} size={30} />
+              <div className={'w-full'}>
+                <div className='text-sm font-medium flex items-center w-full flex-1'>
+                  {ellipseAddress(comment?.node?.authorAddress)}
+                  <div className={'text-gray-400 ml-auto text-xs'}>{comment?.node?.createdAt}</div>
+                </div>
+                <div className='text-sm text-gray-400'>{comment?.node.body}</div>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
-    </>
+      <div className={'flex gap-4 items-center'}>
+        <div className='form-group'>
+          <input className={'input'} value={comment} onChange={(e) => setComment(e.target.value)} type='text' />
+        </div>
+        <button onClick={onComment} className={'btn-primary py-2'} disabled={commentDoing}>
+          {commentDoing && <Spinner />}
+          Comment
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -219,15 +242,6 @@ const Group = () => {
   const onSend = async (msg: string) => {
     const iv = crypto.getRandomValues(new Uint8Array(16))
 
-    // const text = await crypto.subtle.encrypt(
-    //   {
-    //     name: 'AES-CBC',
-    //     iv,
-    //     length: 128,
-    //   },
-    //   symKey,
-    //   str2ab(msg)
-    // )
     const text = await aesEncrypt(iv, symKey, msg)
     console.log(text)
     if (timIsReady && timClient) {
@@ -351,8 +365,10 @@ const Group = () => {
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
 
+  const [postDoing, setPostDoing] = useState(false)
   const onPost = async () => {
     if (!address) return
+    setPostDoing(true)
 
     try {
       const cyberConnect = new CyberConnect({
@@ -374,6 +390,9 @@ const Group = () => {
     } catch (e) {
       console.error(e)
     }
+    await new Promise((resolve) => setTimeout(resolve, 3000))
+
+    setPostDoing(false)
   }
 
   const {posts, postCount} = usePosts(owner)
@@ -473,34 +492,39 @@ const Group = () => {
           </div>
           {type === 1 && (
             <div style={{height: 'calc(100vh-100px)'}} className={'overflow-y-scroll h-[calc(100vh-100px)]'}>
-              <div>
-                <div className='form-group mb-6'>
-                  <input
-                    type='text'
-                    className={'input'}
-                    placeholder={'Type your title'}
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
+              {owner === address && (
+                <div>
+                  <div className='form-group mb-6'>
+                    <input
+                      type='text'
+                      className={'input'}
+                      placeholder={'Type your title'}
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                    />
+                  </div>
+                  <div className='form-group mb-6'>
+                    <textarea
+                      className={'input'}
+                      value={body}
+                      onChange={(e) => setBody(e.target.value)}
+                      placeholder={'Type your content'}
+                    />
+                  </div>
+                  <div className='flex'>
+                    <button className={'ml-auto btn btn-primary mb-12'} onClick={onPost} disabled={postDoing}>
+                      {postDoing && <Spinner />}
+                      Post
+                    </button>
+                  </div>
                 </div>
-                <div className='form-group mb-6'>
-                  <textarea
-                    className={'input'}
-                    value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                    placeholder={'Type your content'}
-                  />
-                </div>
-                <div className='flex'>
-                  <button className={'ml-auto btn btn-primary mb-12'} onClick={onPost}>
-                    Post
-                  </button>
-                </div>
+              )}
+              <div className='flex flex-col gap-28'>
+                {filterPosts &&
+                  filterPosts?.map((post: any) => {
+                    return <Post post={post} key={post?.node?.id} />
+                  })}
               </div>
-              {filterPosts &&
-                filterPosts?.map((post: any) => {
-                  return <Post post={post} key={post?.node?.id} />
-                })}
             </div>
           )}
           {type === 0 && (

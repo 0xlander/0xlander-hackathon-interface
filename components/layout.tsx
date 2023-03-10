@@ -1,6 +1,14 @@
 import {ReactNode, useEffect, useState} from 'react'
 import {Header} from './header'
-import {useAccount, useContractWrite, usePrepareContractWrite, useSignMessage} from 'wagmi'
+import {
+  useAccount,
+  useContract,
+  useContractWrite,
+  usePrepareContractWrite,
+  useSigner,
+  useSignMessage,
+  useWaitForTransaction,
+} from 'wagmi'
 import {Sidebar} from './sidebar'
 import {ConnectButton} from '@rainbow-me/rainbowkit'
 import {useIsLogged} from '../hooks/useIsLogged'
@@ -15,23 +23,22 @@ import {Spinner} from './style'
 import {toast} from 'react-hot-toast'
 import useListConversations from '../hooks/useListConversations'
 import useIsSSR from '../hooks/contract'
+import {useDebounce} from 'usehooks-ts'
 
 let handled = false
 
 export const Layout = ({children}: {children: ReactNode}) => {
+  const {data: signer} = useSigner()
   const {address} = useAccount()
   const {isLogged, isChecked} = useIsLogged()
 
+  const [can, setCan] = useState(false)
   const [handle, setHandle] = useState('')
+  const debounceHandle = useDebounce(handle, 1000)
 
   useListConversations()
 
-  const {loading, data} = useQuery(PRIMARY_PROFILE, {
-    variables: {
-      address: address,
-    },
-    pollInterval: 2000,
-  })
+  const {loading, data} = useQuery(PRIMARY_PROFILE, {variables: {address: address}, pollInterval: 2000})
 
   const hadHandle = !!data?.address?.wallet?.primaryProfile
 
@@ -88,28 +95,50 @@ export const Layout = ({children}: {children: ReactNode}) => {
       '0x',
       '0x',
     ],
-    enabled: false,
   })
 
-  const {writeAsync, isLoading, isSuccess} = useContractWrite(config)
+  const contract = useContract({
+    abi: ProfileNFTABI,
+    address: '0x57e12b7a5f38a7f9c23ebd0400e6e53f2a45f271',
+    signerOrProvider: signer?.provider,
+  })
+
+  useEffect(() => {
+    const query = async () => {
+      if (debounceHandle) {
+        const id = await contract?.getProfileIdByHandle(debounceHandle)
+        console.log(id)
+        if (id.gt(0)) {
+          setCan(false)
+        } else {
+          setCan(true)
+        }
+      } else {
+        setCan(false)
+      }
+    }
+    try {
+      query()
+    } catch (e) {
+      console.error(e)
+    }
+  }, [debounceHandle])
+
+  const {write, data: wd} = useContractWrite(config)
+  const {isLoading} = useWaitForTransaction({
+    hash: wd?.hash,
+    onSuccess: () => {
+      setHandle('')
+      toast.success('Create profile successfully')
+    },
+  })
 
   const [doing, setDoing] = useState(false)
 
   const isSSR = useIsSSR()
 
-  const onCreate = async () => {
-    setDoing(true)
-    await refetch()
-    if (handle) {
-      try {
-        const tx = await writeAsync?.()
-        await tx?.wait()
-        toast.success('Create profile successfully')
-      } catch (e) {
-        console.error('create', e)
-      }
-      setDoing(false)
-    }
+  const onCreate = () => {
+    write?.()
   }
 
   if (isSSR) {
@@ -156,8 +185,8 @@ export const Layout = ({children}: {children: ReactNode}) => {
                   <p>Choose your ccProfile handle</p>
                   <input type='text' className={'input'} value={handle} onChange={(e) => setHandle(e.target.value)} />
                 </div>
-                <button className={'btn btn-primary mt-8'} onClick={onCreate} disabled={doing}>
-                  {doing && <Spinner />}
+                <button className={'btn btn-primary mt-8'} onClick={onCreate} disabled={isLoading || !can}>
+                  {isLoading && <Spinner />}
                   Create
                 </button>
               </div>

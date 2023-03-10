@@ -26,11 +26,9 @@ export const ChatWithNftHolders = ({nft}: {nft: Nft}) => {
     const chatId = dayjs().unix()
     if (new BigNumber(tokenId.toString()).gt(0)) {
       const town = await townsContract?.tokenId2Towns(tokenId.toString())
-      console.log(town)
       const res = await timClient.joinGroup({
         groupID: town.chatId,
       })
-      console.log(res)
       if (res?.code === 0) {
         toast.success('Join group successfully')
         router.push(`/group/GROUP${town.chatId}`)
@@ -74,7 +72,6 @@ export const ChatWithNftHolders = ({nft}: {nft: Nft}) => {
             },
           ],
         })
-        console.log(res)
       } catch (e) {
         console.error('create group: ', e)
       }

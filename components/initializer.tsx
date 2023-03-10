@@ -98,7 +98,6 @@ export const Initializer = ({children}: {children: ReactNode}): JSX.Element => {
 
         let onMessageReceived = function (event: any) {
           const messageList = event.data
-          console.log(event.data)
           messageList.forEach((message: any) => {
             addTimMessages(message.conversationID, [message])
             if (message.type === TIM.TYPES.MSG_TEXT) {

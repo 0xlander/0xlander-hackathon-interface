@@ -15,7 +15,6 @@ export const ChatWithAddress = ({address, onCallback}: {address: string; onCallb
   const onChat = async () => {
     setDoing(true)
     const convo = conversations.get(address)
-    console.log(convo)
     if (!convo) {
       const newConvo = await xmtpClient?.conversations.newConversation(address)
       if (newConvo) {

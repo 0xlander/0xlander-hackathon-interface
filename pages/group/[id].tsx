@@ -63,7 +63,6 @@ const Post = ({post}: {post: any}) => {
       signingMessageEntity: 'CyberConnect',
     })
     const res = await cyberConnect.like(post?.node?.contentID)
-    console.log(res)
     setDoing(false)
   }
 
@@ -76,7 +75,6 @@ const Post = ({post}: {post: any}) => {
       signingMessageEntity: 'CyberConnect',
     })
     const res = await cyberConnect.dislike(post?.node?.contentID)
-    console.log(res)
     setDoing(false)
   }
 
@@ -97,7 +95,6 @@ const Post = ({post}: {post: any}) => {
         body: comment,
         author: profile?.address?.wallet?.primaryProfile.handle,
       })
-      console.log(res)
     } catch (e) {
       console.error(e)
     }
@@ -249,7 +246,6 @@ const Group = () => {
     const iv = crypto.getRandomValues(new Uint8Array(16))
 
     const text = await aesEncrypt(iv, symKey, msg)
-    console.log(text)
     if (timIsReady && timClient) {
       let message = timClient?.createTextMessage({
         to: chatId,
@@ -392,7 +388,6 @@ const Group = () => {
         }),
         author: data?.address?.wallet?.primaryProfile?.handle,
       })
-      console.log(res)
     } catch (e) {
       console.error(e)
     }

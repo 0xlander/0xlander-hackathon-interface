@@ -55,7 +55,6 @@ const LivestreamModal = ({open, onClose, stream}: {open: boolean; onClose: any; 
   }, [])
 
   const onStart = async () => {
-    console.log(streamEl)
     if (!streamEl.current) {
       alert('Video stream was not started.')
     }
@@ -206,11 +205,9 @@ export const MessageTile = ({message, isDecrypted}: MessageTileProps): JSX.Eleme
 
   const onJoin = async (chatId: string) => {
     setDoing(true)
-    console.log(content)
     const res = await timClient.joinGroup({
       groupID: chatId,
     })
-    console.log(res)
     if (res?.code === 0) {
       toast.success('Join group successfully')
       router.push(`/group/GROUP${chatId}`)
@@ -236,7 +233,6 @@ export const MessageTile = ({message, isDecrypted}: MessageTileProps): JSX.Eleme
 
         // @ts-ignore
         videoEl.current.srcObject = streamEl.current
-        console.log(videoEl)
         // @ts-ignore
         // videoEl.current = {autoplay: true}
         // @ts-ignore
@@ -267,7 +263,6 @@ export const MessageTile = ({message, isDecrypted}: MessageTileProps): JSX.Eleme
 
         // @ts-ignore
         videoEl.current.srcObject = streamEl.current
-        console.log(videoEl)
         // @ts-ignore
         videoEl.current.play()
       } catch (e) {

@@ -67,7 +67,6 @@ const Subscribe = () => {
             contractAddress: r.tokenAddress.checksum,
           }
         })
-        console.log('fi ', filter)
         setNfts(filter)
       } catch (e) {
         console.error(e)

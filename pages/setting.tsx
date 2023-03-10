@@ -15,7 +15,6 @@ const Setting = () => {
   const [email, setEmail] = useState('')
   const primaryProfile = useAppStore((state) => state.primaryProfile)
   const profile = primaryProfile?.address?.wallet?.primaryProfile
-  console.log(profile)
   const [createSetMetadataTypedData] = useMutation(CREATE_SET_METADATA_TYPED_DATA)
   const {data: signMetadataSignature, signTypedDataAsync} = useSignTypedData()
   const [relay] = useMutation(RELAY)
@@ -42,7 +41,6 @@ const Setting = () => {
         })
           .then((res) => res.json())
           .then((res) => {
-            console.log(res)
             setMetadata(res)
           })
           .catch((e) => console.error(e))
@@ -66,8 +64,6 @@ const Setting = () => {
           },
         },
       })
-
-      console.log(typedDataResult)
 
       const typedData = typedDataResult.data?.createSetMetadataTypedData?.typedData
 
@@ -94,8 +90,6 @@ const Setting = () => {
           fetchPolicy: 'network-only',
         })
 
-        console.log('res', res)
-        console.log('res 3000', res.data.relayActionStatus)
         if (res.data.relayActionStatus.txStatus === 'SUCCESS') {
           break
         }

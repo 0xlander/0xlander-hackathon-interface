@@ -47,7 +47,6 @@ export const CreateSubscribersGroupWrapper = () => {
       const res = await timClient.joinGroup({
         groupID: town.chatId,
       })
-      console.log(res)
       if (res?.code === 0) {
         toast.success('Join group successfully')
         router.push(`/group/GROUP${town.chatId}`)
@@ -83,7 +82,6 @@ export const CreateSubscribersGroupWrapper = () => {
             },
           ],
         })
-        console.log(res)
         const tx = await townsContract?.mintHolderTown(
           address,
           contractAddress,

@@ -61,7 +61,6 @@ export const CreateGroupModal = ({
             },
           ],
         })
-        console.log(res)
         const tx = await townsContract?.mintLeaderTown(address, chatId.toString(), name, description, '2')
         toast.error('Create group successfully')
         router.push(`/group/GROUP${chatId}`)

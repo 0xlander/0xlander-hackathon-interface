@@ -32,8 +32,6 @@ export default function Home() {
 
   const onPost = async () => {
     const {encryptedString, encryptedSymmetricKey} = await encryptWithLit(primaryProfile?.profileID, body)
-    console.log(encryptedString)
-    console.log(encryptedSymmetricKey)
     if (!address) return
 
     try {
@@ -52,7 +50,6 @@ export default function Home() {
         }),
         author: data?.address?.wallet?.primaryProfile?.handle,
       })
-      console.log(res)
     } catch (e) {
       console.error(e)
     }

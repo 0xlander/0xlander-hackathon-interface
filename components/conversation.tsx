@@ -64,7 +64,6 @@ export const Conversation = ({recipientWalletAddr}: ConversationProps): JSX.Elem
 
   const onVideoClick = async () => {
     const stream = await createStream?.()
-    console.log(stream)
     sendMessage(
       JSON.stringify({
         type: 'livestream',

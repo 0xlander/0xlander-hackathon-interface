@@ -23,7 +23,6 @@ export const useLoginGetMessage = (domain: string, address: string | undefined) 
       },
     })
       .then((data) => {
-        console.log(data)
         return data?.loginGetMessage?.message
       })
       .catch((e) => console.error(e))

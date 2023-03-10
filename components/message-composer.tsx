@@ -41,10 +41,8 @@ const MessageSender = ({onSend, onVideoClick}: MessageComposerProps): JSX.Elemen
   const [openDistribution, setOpenDistribution] = useState(false)
 
   const onUpload = (e: {target: {files: any}}) => {
-    console.log(e.target.files)
     // setPoster(e.target.files)
     // setPosterSrc(URL.createObjectURL(e.target.files[0]))
-    console.log(e.target.files[0])
   }
 
   const [name, setName] = useState('')

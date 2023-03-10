@@ -13,7 +13,6 @@ export const JoinButton = ({chatId}: {chatId: string}) => {
     const res = await timClient.joinGroup({
       groupID: chatId,
     })
-    console.log(res)
     if (res?.code === 0) {
       toast.success('Join group successfully')
       router.push(`/group/GROUP${chatId}`)

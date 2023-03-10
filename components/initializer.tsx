@@ -1,16 +1,10 @@
 import React, {ReactNode, useCallback, useEffect, useState} from 'react'
 import {useAccount, useSigner} from 'wagmi'
-import {useIsLogged} from '../hooks/useIsLogged'
 import {useQuery} from '@apollo/client'
 import {PRIMARY_PROFILE} from '../graphql'
 import {useAppStore} from '../store/app'
 import {arrayify} from '@ethersproject/bytes'
-import {
-  NotifiContext,
-  NotifiInputFieldsText,
-  NotifiInputSeparators,
-  NotifiSubscriptionCard,
-} from '@notifi-network/notifi-react-card'
+import {NotifiContext} from '@notifi-network/notifi-react-card'
 // @ts-ignore
 import LitJsSdk from '@lit-protocol/sdk-browser'
 import {Signer} from '@wagmi/core'
@@ -29,20 +23,12 @@ let initialized = false
 export const Initializer = ({children}: {children: ReactNode}): JSX.Element => {
   const {data: signer} = useSigner()
   const {address} = useAccount()
-  const isLogged = useIsLogged()
-  const timConversations = useAppStore((state) => state.timConversations)
-  const alchemyClient = useAppStore((state) => state.alchemyClient)
-  const setAlchemyClient = useAppStore((state) => state.setAlchemyClient)
   const setTimConversations = useAppStore((state) => state.setTimConversations)
   const setPrimaryProfile = useAppStore((state) => state.setPrimaryProfile)
-  const setLoadingConversations = useAppStore((state) => state.setLoadingConversations)
   const setLitClient = useAppStore((state) => state.setLitClient)
   const timClient = useAppStore((state) => state.timClient)
   const setTimClient = useAppStore((state) => state.setTimClient)
   const xmtpClient = useAppStore((state) => state.xmtpClient)
-  const conversations = useAppStore((state) => state.conversations)
-  const setConversations = useAppStore((state) => state.setConversations)
-  const convoMessages = useAppStore((state) => state.convoMessages)
   const setXmtpClient = useAppStore((state) => state.setXmtpClient)
   const reset = useAppStore((state) => state.reset)
   const [isRequestPending, setIsRequestPending] = useState(false)
@@ -72,7 +58,7 @@ export const Initializer = ({children}: {children: ReactNode}): JSX.Element => {
 
       try {
         Moralis.start({
-          apiKey: 'QcorwcmEW17WbQWyRqyDAmy3uhX2f8qWYzBnfQ5qVbvXYRy2tw3p2ZcniEDqn18J',
+          apiKey: process.env.NEXT_PUBLIC_MORALIS_API_KEY,
         })
         init()
       } catch (e) {
@@ -97,7 +83,7 @@ export const Initializer = ({children}: {children: ReactNode}): JSX.Element => {
     if (!timClient && address) {
       try {
         let options = {
-          SDKAppID: 1721000070,
+          SDKAppID: Number(process.env.NEXT_PUBLIC_TIM_SDK_APP_ID),
         }
         let tim = TIM.create(options)
 
